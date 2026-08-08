@@ -1,6 +1,12 @@
 extends Node3D
 class_name GrayboxLevel
 
+const DOOR_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/door-wide-closed.glb")
+const PIPE_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/pipe-large.glb")
+const MACHINE_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/machine.glb")
+const CATWALK_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/catwalk-straight.glb")
+const BOX_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/box-large.glb")
+
 signal checkpoint_reached(number: int)
 signal exit_reached
 
@@ -85,6 +91,13 @@ func _build_industrial_decoration() -> void:
 		_add_prop_box("Crate", position, Vector3(1.6, 1.6, 1.6), dark_metal)
 	for position in [Vector3(0, 0.05, -8), Vector3(0, 0.05, -25), Vector3(0, 0.05, -45)]:
 		_add_beacon(position, Color("#4d8dff"))
+	_add_asset(DOOR_SCENE, Vector3(0, 0.0, -54), Vector3.ZERO, Vector3.ONE)
+	_add_asset(PIPE_SCENE, Vector3(-6.8, 2.0, -17), Vector3(0, 0, 0), Vector3.ONE)
+	_add_asset(PIPE_SCENE, Vector3(6.8, 2.0, -17), Vector3(0, PI, 0), Vector3.ONE)
+	_add_asset(MACHINE_SCENE, Vector3(-8.0, 0.0, -35), Vector3.ZERO, Vector3.ONE)
+	_add_asset(MACHINE_SCENE, Vector3(8.0, 0.0, -35), Vector3(0, PI, 0), Vector3.ONE)
+	_add_asset(CATWALK_SCENE, Vector3(0, 0.0, -63), Vector3.ZERO, Vector3.ONE)
+	_add_asset(BOX_SCENE, Vector3(-5.0, 0.0, -68), Vector3(0, PI * 0.5, 0), Vector3.ONE)
 
 func _add_pipe(position: Vector3, color: Color) -> void:
 	var mesh_instance := MeshInstance3D.new()
@@ -144,6 +157,13 @@ func _add_beacon(position: Vector3, color: Color) -> void:
 	beacon.light_energy = 0.8
 	beacon.omni_range = 3.0
 	add_child(beacon)
+
+func _add_asset(scene: PackedScene, position: Vector3, rotation: Vector3, scale: Vector3) -> void:
+	var instance := scene.instantiate()
+	instance.position = position
+	instance.rotation = rotation
+	instance.scale = scale
+	add_child(instance)
 
 func add_box(box_name: String, position: Vector3, size: Vector3, color: Color) -> void:
 	var body := StaticBody3D.new()

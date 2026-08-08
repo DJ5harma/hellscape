@@ -1,0 +1,25 @@
+[remap]
+
+importer="wavefront_obj"
+importer_version=1
+type="Mesh"
+uid="uid://c8ji8t1m1hb2r"
+path="res://.godot/imported/crane-lift.obj-03dc430bce880e35059bd2cbae8c43b9.mesh"
+
+[deps]
+
+files=["res://.godot/imported/crane-lift.obj-03dc430bce880e35059bd2cbae8c43b9.mesh"]
+
+source_file="res://assets/environment/kenney/kenney_factory-kit_3.0/Models/OBJ format/crane-lift.obj"
+dest_files=["res://.godot/imported/crane-lift.obj-03dc430bce880e35059bd2cbae8c43b9.mesh", "res://.godot/imported/crane-lift.obj-03dc430bce880e35059bd2cbae8c43b9.mesh"]
+
+[params]
+
+generate_tangents=true
+generate_lods=true
+generate_shadow_mesh=true
+generate_lightmap_uv2=false
+generate_lightmap_uv2_texel_size=0.2
+scale_mesh=Vector3(1, 1, 1)
+offset_mesh=Vector3(0, 0, 0)
+force_disable_mesh_compression=false
