@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="EncounterData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="EncounterData" load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://data/encounter_data.gd" id="1_encounter"]
 [ext_resource type="Script" path="res://data/enemy_spawn_data.gd" id="2_spawn"]
 [ext_resource type="Script" path="res://data/encounter_wave_data.gd" id="3_wave"]
+[ext_resource type="Resource" path="res://data/bruiser_enemy.tres" id="4_bruiser"]
+[ext_resource type="Resource" path="res://data/sniper_enemy.tres" id="5_sniper"]
+[ext_resource type="Resource" path="res://data/final_boss.tres" id="6_boss"]
 
 [sub_resource type="Resource" id="Spawn_melee"]
 script = ExtResource("2_spawn")
@@ -39,8 +42,88 @@ enemy_spawns = Array[Resource]([
 	SubResource("Spawn_ranged_b")
 ])
 
+[sub_resource type="Resource" id="Spawn_melee_c"]
+script = ExtResource("2_spawn")
+enemy_name = "Level1MeleeC"
+archetype = "melee"
+spawn_mode = "portal"
+spawn_position = Vector3(-5, 1.1, -52)
+
+[sub_resource type="Resource" id="Spawn_melee_d"]
+script = ExtResource("2_spawn")
+enemy_name = "Level1MeleeD"
+archetype = "melee"
+spawn_mode = "portal"
+spawn_position = Vector3(5, 1.1, -56)
+
+[sub_resource type="Resource" id="Wave_two"]
+script = ExtResource("3_wave")
+display_name = "WAVE 2 - CANYON AMBUSH"
+inter_wave_delay = 1.5
+enemy_spawns = Array[Resource]([SubResource("Spawn_melee_c"), SubResource("Spawn_melee_d")])
+
+[sub_resource type="Resource" id="Spawn_sniper_a"]
+script = ExtResource("2_spawn")
+enemy_name = "Level1SniperA"
+archetype = "sniper"
+spawn_position = Vector3(11.5, 3.8, -70)
+enemy_data = ExtResource("5_sniper")
+
+[sub_resource type="Resource" id="Spawn_sniper_b"]
+script = ExtResource("2_spawn")
+enemy_name = "Level1SniperB"
+archetype = "sniper"
+spawn_position = Vector3(10.0, 3.8, -73)
+enemy_data = ExtResource("5_sniper")
+
+[sub_resource type="Resource" id="Wave_three"]
+script = ExtResource("3_wave")
+display_name = "WAVE 3 - HIGH GROUND"
+inter_wave_delay = 1.8
+enemy_spawns = Array[Resource]([SubResource("Spawn_sniper_a"), SubResource("Spawn_sniper_b")])
+
+[sub_resource type="Resource" id="Spawn_bruiser"]
+script = ExtResource("2_spawn")
+enemy_name = "Level1Bruiser"
+archetype = "bruiser"
+spawn_mode = "ambush"
+spawn_position = Vector3(-6, 1.1, -92)
+enemy_data = ExtResource("4_bruiser")
+
+[sub_resource type="Resource" id="Spawn_melee_e"]
+script = ExtResource("2_spawn")
+enemy_name = "Level1MeleeE"
+archetype = "melee"
+spawn_position = Vector3(6, 1.1, -96)
+
+[sub_resource type="Resource" id="Wave_four"]
+script = ExtResource("3_wave")
+display_name = "WAVE 4 - BRUISER PRESSURE"
+inter_wave_delay = 2.0
+enemy_spawns = Array[Resource]([SubResource("Spawn_bruiser"), SubResource("Spawn_melee_e")])
+
+[sub_resource type="Resource" id="Spawn_boss"]
+script = ExtResource("2_spawn")
+enemy_name = "MountainWarden"
+archetype = "boss"
+spawn_position = Vector3(0, 1.8, -108)
+enemy_data = ExtResource("6_boss")
+
+[sub_resource type="Resource" id="Wave_five"]
+script = ExtResource("3_wave")
+display_name = "FINAL BOSS"
+inter_wave_delay = 2.5
+enemy_spawns = Array[Resource]([SubResource("Spawn_boss")])
+
 [resource]
 script = ExtResource("1_encounter")
 display_name = "LEVEL 1 ENCOUNTER"
-objective = "DEFEAT ALL HOSTILES"
-waves = Array[Resource]([SubResource("Wave_one")])
+objective = "SURVIVE THE MOUNTAIN EXPEDITION"
+objective_type = "boss"
+waves = Array[Resource]([
+	SubResource("Wave_one"),
+	SubResource("Wave_two"),
+	SubResource("Wave_three"),
+	SubResource("Wave_four"),
+	SubResource("Wave_five")
+])

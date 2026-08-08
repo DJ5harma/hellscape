@@ -200,6 +200,7 @@ func _on_encounter_completed() -> void:
 	if level_number == 1:
 		hud.set_status("LEVEL 1 COMPLETE  |  SELECT NEXT LEVEL", colors.objective)
 		level.open_gate("LockedGate")
+		level.open_gate("FinalGate")
 		hud.show_completion(true)
 	else:
 		hud.set_status("LEVEL 2 COMPLETE  |  EXTRACTION AVAILABLE", colors.objective)

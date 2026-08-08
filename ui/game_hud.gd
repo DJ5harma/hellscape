@@ -18,7 +18,7 @@ func build() -> void:
 	status_label = _add_label(Vector2(28, 24), 24, Color.WHITE)
 	status_label.text = "REACH EXTRACTION  |  WASD to move  |  Mouse to look"
 	checkpoint_label = _add_label(Vector2(28, 58), 20, Color("#4d8dff"))
-	checkpoint_label.text = "CHECKPOINT 0 / 4"
+	checkpoint_label.text = "CHECKPOINT 0 / 5"
 	help_label = _add_label(Vector2(28, 92), 18, Color("#f5c76b"))
 	help_label.text = "1 attack  |  2 special  |  3 heavy  |  SPACE jump  |  SHIFT dodge  |  TAB switch  |  R reset"
 	health_label = _add_label(Vector2(28, 126), 18, Color("#ff7777"))
@@ -89,7 +89,7 @@ func set_status(message: String, color := Color.WHITE) -> void:
 	status_label.add_theme_color_override("font_color", color)
 
 func set_checkpoint(number: int) -> void:
-	checkpoint_label.text = "CHECKPOINT %d / 4" % number
+	checkpoint_label.text = "CHECKPOINT %d / 5" % number
 
 func show_completion(show_next_level := true) -> void:
 	completion_label.visible = true
