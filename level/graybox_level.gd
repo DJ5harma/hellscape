@@ -6,6 +6,7 @@ const PIPE_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_
 const MACHINE_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/machine.glb")
 const CATWALK_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/catwalk-straight.glb")
 const BOX_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/box-large.glb")
+const INDICATOR_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/indicator-special-area.glb")
 
 signal checkpoint_reached(number: int)
 signal exit_reached
@@ -91,13 +92,17 @@ func _build_industrial_decoration() -> void:
 		_add_prop_box("Crate", position, Vector3(1.6, 1.6, 1.6), dark_metal)
 	for position in [Vector3(0, 0.05, -8), Vector3(0, 0.05, -25), Vector3(0, 0.05, -45)]:
 		_add_beacon(position, Color("#4d8dff"))
-	_add_asset(DOOR_SCENE, Vector3(0, 0.0, -54), Vector3.ZERO, Vector3.ONE)
+	_add_asset(DOOR_SCENE, Vector3(0, 0.0, -54), Vector3.ZERO, Vector3.ONE, Vector3(8.0, 5.0, 0.6))
 	_add_asset(PIPE_SCENE, Vector3(-6.8, 2.0, -17), Vector3(0, 0, 0), Vector3.ONE)
 	_add_asset(PIPE_SCENE, Vector3(6.8, 2.0, -17), Vector3(0, PI, 0), Vector3.ONE)
-	_add_asset(MACHINE_SCENE, Vector3(-8.0, 0.0, -35), Vector3.ZERO, Vector3.ONE)
-	_add_asset(MACHINE_SCENE, Vector3(8.0, 0.0, -35), Vector3(0, PI, 0), Vector3.ONE)
+	_add_asset(MACHINE_SCENE, Vector3(-8.0, 0.0, -35), Vector3.ZERO, Vector3.ONE, Vector3(2.5, 2.0, 2.5))
+	_add_asset(MACHINE_SCENE, Vector3(8.0, 0.0, -35), Vector3(0, PI, 0), Vector3.ONE, Vector3(2.5, 2.0, 2.5))
 	_add_asset(CATWALK_SCENE, Vector3(0, 0.0, -63), Vector3.ZERO, Vector3.ONE)
-	_add_asset(BOX_SCENE, Vector3(-5.0, 0.0, -68), Vector3(0, PI * 0.5, 0), Vector3.ONE)
+	_add_asset(BOX_SCENE, Vector3(-5.0, 0.0, -68), Vector3(0, PI * 0.5, 0), Vector3.ONE, Vector3(2.0, 2.0, 2.0))
+	_add_asset(INDICATOR_SCENE, Vector3(0, 0.02, -25), Vector3.ZERO, Vector3.ONE)
+	_add_asset(INDICATOR_SCENE, Vector3(0, 0.02, -62), Vector3.ZERO, Vector3.ONE)
+	_add_encounter_marker(Vector3(0, 0.03, -25), Color("#d34e35"))
+	_add_encounter_marker(Vector3(0, 0.03, -62), Color("#d34e35"))
 
 func _add_pipe(position: Vector3, color: Color) -> void:
 	var mesh_instance := MeshInstance3D.new()
@@ -121,6 +126,7 @@ func _add_lamp(position: Vector3, color: Color) -> void:
 	lamp.light_color = color
 	lamp.light_energy = 1.4
 	lamp.omni_range = 7.0
+	lamp.shadow_enabled = false
 	add_child(lamp)
 	var mesh_instance := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
@@ -156,14 +162,53 @@ func _add_beacon(position: Vector3, color: Color) -> void:
 	beacon.light_color = color
 	beacon.light_energy = 0.8
 	beacon.omni_range = 3.0
+	beacon.shadow_enabled = false
 	add_child(beacon)
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.22
+	mesh.bottom_radius = 0.3
+	mesh.height = 0.12
+	mesh_instance.mesh = mesh
+	mesh_instance.position = position + Vector3.UP * 0.08
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.emission_enabled = true
+	material.emission = color
+	material.emission_energy_multiplier = 2.0
+	mesh.material = material
+	add_child(mesh_instance)
 
-func _add_asset(scene: PackedScene, position: Vector3, rotation: Vector3, scale: Vector3) -> void:
+func _add_encounter_marker(position: Vector3, color: Color) -> void:
+	var marker := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(10.0, 0.04, 0.12)
+	marker.mesh = mesh
+	marker.position = position + Vector3.UP * 0.04
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.emission_enabled = true
+	material.emission = color
+	material.emission_energy_multiplier = 1.5
+	mesh.material = material
+	add_child(marker)
+
+func _add_asset(scene: PackedScene, position: Vector3, rotation: Vector3, scale: Vector3, collision_size := Vector3.ZERO) -> void:
 	var instance := scene.instantiate()
 	instance.position = position
 	instance.rotation = rotation
 	instance.scale = scale
 	add_child(instance)
+	if collision_size != Vector3.ZERO:
+		var body := StaticBody3D.new()
+		body.name = "%sCollision" % instance.name
+		body.position = position
+		var collision := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = collision_size
+		collision.shape = shape
+		body.add_child(collision)
+		add_child(body)
 
 func add_box(box_name: String, position: Vector3, size: Vector3, color: Color) -> void:
 	var body := StaticBody3D.new()
