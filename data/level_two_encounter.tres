@@ -1,10 +1,11 @@
-[gd_resource type="Resource" script_class="EncounterData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="EncounterData" load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://data/encounter_data.gd" id="1_encounter"]
 [ext_resource type="Script" path="res://data/enemy_spawn_data.gd" id="2_spawn"]
 [ext_resource type="Resource" path="res://data/bruiser_enemy.tres" id="3_bruiser"]
 [ext_resource type="Resource" path="res://data/sniper_enemy.tres" id="4_sniper"]
 [ext_resource type="Script" path="res://data/encounter_wave_data.gd" id="5_wave"]
+[ext_resource type="Resource" path="res://data/final_boss.tres" id="6_boss"]
 
 [sub_resource type="Resource" id="Spawn_melee"]
 script = ExtResource("2_spawn")
@@ -41,8 +42,22 @@ script = ExtResource("5_wave")
 display_name = "WAVE 3"
 enemy_spawns = Array[Resource]([SubResource("Spawn_bruiser")])
 
+[sub_resource type="Resource" id="Spawn_boss"]
+script = ExtResource("2_spawn")
+enemy_name = "MountainWarden"
+archetype = "boss"
+spawn_position = Vector3(0, 1.8, -108)
+enemy_data = ExtResource("6_boss")
+
+[sub_resource type="Resource" id="Wave_four"]
+script = ExtResource("5_wave")
+display_name = "FINAL BOSS"
+inter_wave_delay = 2.0
+enemy_spawns = Array[Resource]([SubResource("Spawn_boss")])
+
 [resource]
 script = ExtResource("1_encounter")
 display_name = "LEVEL 2 ENCOUNTER"
-objective = "SURVIVE THE INDUSTRIAL GAUNTLET"
-waves = Array[Resource]([SubResource("Wave_one"), SubResource("Wave_two"), SubResource("Wave_three")])
+objective = "SURVIVE THE MOUNTAIN GAUNTLET"
+objective_type = "boss"
+waves = Array[Resource]([SubResource("Wave_one"), SubResource("Wave_two"), SubResource("Wave_three"), SubResource("Wave_four")])

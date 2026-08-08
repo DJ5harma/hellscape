@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="BossData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://data/boss_data.gd" id="1_boss"]
+[ext_resource type="Script" path="res://data/boss_phase_data.gd" id="2_phase"]
+
+[sub_resource type="Resource" id="Phase_one"]
+script = ExtResource("2_phase")
+phase_name = "PHASE 1"
+health_threshold = 1.0
+move_speed = 2.2
+attack_damage = 20
+attack_range = 3.5
+attack_cooldown = 1.4
+telegraph_text = "BOSS SMASH"
+
+[sub_resource type="Resource" id="Phase_two"]
+script = ExtResource("2_phase")
+phase_name = "PHASE 2"
+health_threshold = 0.5
+move_speed = 3.4
+attack_damage = 30
+attack_range = 4.5
+attack_cooldown = 0.9
+telegraph_text = "RAGE ATTACK"
+
+[resource]
+script = ExtResource("1_boss")
+display_name = "Mountain Warden"
+max_health = 250
+visual_color = Color(0.55, 0.2, 0.8, 1)
+phases = Array[Resource]([SubResource("Phase_one"), SubResource("Phase_two")])
