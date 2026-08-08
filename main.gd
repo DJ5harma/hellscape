@@ -4,12 +4,8 @@ const MOBILE_CONTROLS_SCRIPT := preload("res://mobile_controls.gd")
 const FEEDBACK_AUDIO_SCRIPT := preload("res://systems/feedback_audio.gd")
 const ACTOR_FACTORY_SCRIPT := preload("res://systems/actor_factory.gd")
 const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
+const HUD_SCRIPT := preload("res://ui/game_hud.gd")
 
-var status_label: Label
-var checkpoint_label: Label
-var health_label: Label
-var energy_label: Label
-var completion_label: Label
 var checkpoint := 0
 var encounter_complete := false
 var player: CharacterBody3D
@@ -18,6 +14,7 @@ var remaining_enemies := 2
 var feedback_audio
 var actor_factory
 var level
+var hud
 
 var colors := {
 	"floor": Color("#38434a"),
@@ -49,9 +46,8 @@ func _ready() -> void:
 	_build_mobile_controls()
 
 func _process(_delta: float) -> void:
-	if is_instance_valid(player) and is_instance_valid(health_label):
-		health_label.text = "HEALTH %d" % player.health
-		energy_label.text = "ENERGY %d / 100" % roundi(player.energy)
+	if is_instance_valid(player) and is_instance_valid(hud):
+		hud.update_player(player)
 
 func _build_player() -> void:
 	player = actor_factory.create_player(self, Vector3(0, 1.1, 5))
@@ -72,42 +68,10 @@ func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3) -> void:
 	actor_factory.create_ranged_enemy(self, enemy_name, player, spawn_position)
 
 func _build_hud() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	status_label = Label.new()
-	status_label.position = Vector2(28, 24)
-	status_label.add_theme_font_size_override("font_size", 24)
-	status_label.text = "REACH EXTRACTION  |  WASD to move  |  Mouse to look"
-	layer.add_child(status_label)
-	checkpoint_label = Label.new()
-	checkpoint_label.position = Vector2(28, 58)
-	checkpoint_label.add_theme_color_override("font_color", colors.checkpoint)
-	checkpoint_label.add_theme_font_size_override("font_size", 20)
-	checkpoint_label.text = "CHECKPOINT 0 / 4"
-	layer.add_child(checkpoint_label)
-	var help_label := Label.new()
-	help_label.position = Vector2(28, 92)
-	help_label.add_theme_color_override("font_color", Color("#f5c76b"))
-	help_label.add_theme_font_size_override("font_size", 18)
-	help_label.text = "1 attack  |  2 special  |  3 heavy  |  SPACE jump  |  SHIFT dodge  |  R reset"
-	layer.add_child(help_label)
-	health_label = Label.new()
-	health_label.position = Vector2(28, 126)
-	health_label.add_theme_color_override("font_color", Color("#ff7777"))
-	health_label.add_theme_font_size_override("font_size", 18)
-	layer.add_child(health_label)
-	energy_label = Label.new()
-	energy_label.position = Vector2(28, 152)
-	energy_label.add_theme_color_override("font_color", Color("#bd8cff"))
-	energy_label.add_theme_font_size_override("font_size", 18)
-	layer.add_child(energy_label)
-	completion_label = Label.new()
-	completion_label.position = Vector2(420, 300)
-	completion_label.add_theme_font_size_override("font_size", 38)
-	completion_label.add_theme_color_override("font_color", colors.objective)
-	completion_label.text = "LEVEL COMPLETE\nPress R to replay"
-	completion_label.visible = false
-	layer.add_child(completion_label)
+	hud = HUD_SCRIPT.new()
+	hud.name = "GameHUD"
+	add_child(hud)
+	hud.build()
 
 func _build_mobile_controls() -> void:
 	var layer := CanvasLayer.new()
@@ -128,28 +92,27 @@ func _on_checkpoint_entered(number: int) -> void:
 	if number > checkpoint:
 		checkpoint = number
 		player.respawn_position = player.global_position
-		checkpoint_label.text = "CHECKPOINT %d / 3" % checkpoint
+		hud.set_checkpoint(checkpoint)
 
 func _on_exit_entered() -> void:
 	if encounter_complete:
-		status_label.text = "EXTRACTION REACHED  |  GRAYBOX COMPLETE"
-		status_label.add_theme_color_override("font_color", colors.objective)
-		completion_label.visible = true
+		hud.set_status("EXTRACTION REACHED  |  GRAYBOX COMPLETE", colors.objective)
+		hud.show_completion()
 	else:
-		status_label.text = "GATE LOCKED  |  CLEAR BOTH ENCOUNTERS FIRST"
+		hud.set_status("GATE LOCKED  |  CLEAR BOTH ENCOUNTERS FIRST")
 
 func enemy_defeated() -> void:
 	remaining_enemies -= 1
 	if remaining_enemies > 0:
-		status_label.text = "ENEMY DEFEATED  |  %d REMAINING" % remaining_enemies
+		hud.set_status("ENEMY DEFEATED  |  %d REMAINING" % remaining_enemies)
 		return
 	if encounter_stage == 1:
 		encounter_stage = 2
 		remaining_enemies = 2
 		checkpoint = 4
 		player.respawn_position = Vector3(0, 1.1, -56)
-		checkpoint_label.text = "CHECKPOINT 4 / 4"
-		status_label.text = "FIRST AREA CLEAR  |  SECOND ENCOUNTER STARTING"
+		hud.set_checkpoint(4)
+		hud.set_status("FIRST AREA CLEAR  |  SECOND ENCOUNTER STARTING")
 		var locked_gate: Node = level.get_node_or_null("LockedGate")
 		if locked_gate:
 			locked_gate.queue_free()
@@ -157,8 +120,7 @@ func enemy_defeated() -> void:
 		_spawn_ranged_enemy("SecondRanged", Vector3(5, 1.1, -70))
 	elif encounter_stage == 2:
 		encounter_complete = true
-		status_label.text = "ALL AREAS CLEAR  |  FINAL GATE UNLOCKED"
-		status_label.add_theme_color_override("font_color", colors.objective)
+		hud.set_status("ALL AREAS CLEAR  |  FINAL GATE UNLOCKED", colors.objective)
 		var final_gate: Node = level.get_node_or_null("FinalGate")
 		if final_gate:
 			final_gate.queue_free()

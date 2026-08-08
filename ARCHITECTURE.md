@@ -10,7 +10,14 @@ enemy.gd                Melee enemy behavior
 ranged_enemy.gd         Ranged enemy behavior and projectiles
 ally.gd                 Companion follow and support behavior
 projectile.gd           Projectile movement and hit detection
+player.tscn              Reusable player scene
+ally.tscn                Reusable companion scene
+melee_enemy.tscn         Reusable melee enemy scene
+ranged_enemy.tscn        Reusable ranged enemy scene
+projectile.tscn          Reusable projectile scene
 mobile_controls.gd      Touch input and touch-only presentation
+ui/
+└── game_hud.gd         HUD state and presentation
 systems/
 ├── actor_factory.gd    Centralized actor construction
 └── feedback_audio.gd   Runtime placeholder sound generation
@@ -30,6 +37,8 @@ level/
   rather than duplicating setup in `main.gd`.
 - UI scripts should emit intent (`attack_pressed`, `movement_changed`) rather
   than directly changing gameplay state.
+- `ui/game_hud.gd` owns HUD labels and completion presentation. Gameplay code
+  sends status updates through its small public API.
 - Procedural graybox construction lives in `level/graybox_level.gd`; replace
   this builder with authored `.tscn` scenes when the layout stabilizes.
 - Placeholder audio is isolated behind `FeedbackAudio`; replacing generated

@@ -1,54 +1,50 @@
 extends Node
 class_name ActorFactory
 
-const PLAYER_SCRIPT := preload("res://player.gd")
-const ENEMY_SCRIPT := preload("res://enemy.gd")
-const RANGED_ENEMY_SCRIPT := preload("res://ranged_enemy.gd")
-const ALLY_SCRIPT := preload("res://ally.gd")
+const PLAYER_SCENE := preload("res://player.tscn")
+const ALLY_SCENE := preload("res://ally.tscn")
+const MELEE_ENEMY_SCENE := preload("res://melee_enemy.tscn")
+const RANGED_ENEMY_SCENE := preload("res://ranged_enemy.tscn")
 
 func create_player(parent: Node, spawn_position: Vector3) -> CharacterBody3D:
-	var player := _create_character(parent, "Player", spawn_position, PLAYER_SCRIPT, 1.8, 0.4, Color("#55b7ff"))
+	var player: CharacterBody3D = PLAYER_SCENE.instantiate()
+	player.name = "Player"
+	player.position = spawn_position
+	_set_visual_color(player, Color("#55b7ff"))
+	parent.add_child(player)
 	return player
 
 func create_ally(parent: Node, target: CharacterBody3D, spawn_position: Vector3) -> CharacterBody3D:
-	var ally := _create_character(parent, "Companion", spawn_position, ALLY_SCRIPT, 1.6, 0.35, Color("#4de0aa"))
+	var ally: CharacterBody3D = ALLY_SCENE.instantiate()
+	ally.name = "Companion"
+	ally.position = spawn_position
 	ally.target = target
+	_set_visual_color(ally, Color("#4de0aa"))
+	parent.add_child(ally)
 	return ally
 
 func create_melee_enemy(parent: Node, enemy_name: String, target: CharacterBody3D, spawn_position: Vector3) -> CharacterBody3D:
-	var enemy := _create_character(parent, enemy_name, spawn_position, ENEMY_SCRIPT, 1.8, 0.45, Color("#d84c5c"))
+	var enemy: CharacterBody3D = MELEE_ENEMY_SCENE.instantiate()
+	enemy.name = enemy_name
+	enemy.position = spawn_position
 	enemy.target = target
 	enemy.add_to_group("enemies")
+	_set_visual_color(enemy, Color("#d84c5c"))
+	parent.add_child(enemy)
 	return enemy
 
 func create_ranged_enemy(parent: Node, enemy_name: String, target: CharacterBody3D, spawn_position: Vector3) -> CharacterBody3D:
-	var enemy := _create_character(parent, enemy_name, spawn_position, RANGED_ENEMY_SCRIPT, 1.8, 0.4, Color("#a65de0"))
+	var enemy: CharacterBody3D = RANGED_ENEMY_SCENE.instantiate()
+	enemy.name = enemy_name
+	enemy.position = spawn_position
 	enemy.target = target
 	enemy.add_to_group("enemies")
+	_set_visual_color(enemy, Color("#a65de0"))
+	parent.add_child(enemy)
 	return enemy
 
-func _create_character(parent: Node, character_name: String, spawn_position: Vector3, script: Script, height: float, radius: float, color: Color) -> CharacterBody3D:
-	var character := CharacterBody3D.new()
-	character.name = character_name
-	character.position = spawn_position
-	character.set_script(script)
-
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.name = "MeshInstance3D"
-	var capsule_mesh := CapsuleMesh.new()
-	capsule_mesh.height = height
-	capsule_mesh.radius = radius
-	mesh_instance.mesh = capsule_mesh
+func _set_visual_color(character: CharacterBody3D, color: Color) -> void:
+	var mesh_instance := character.get_node("MeshInstance3D") as MeshInstance3D
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
-	capsule_mesh.material = material
-	character.add_child(mesh_instance)
-
-	var collision := CollisionShape3D.new()
-	var capsule_shape := CapsuleShape3D.new()
-	capsule_shape.height = height
-	capsule_shape.radius = radius
-	collision.shape = capsule_shape
-	character.add_child(collision)
-	parent.add_child(character)
-	return character
+	mesh_instance.material_override = material

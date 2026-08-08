@@ -1,6 +1,6 @@
 extends CharacterBody3D
 
-const PROJECTILE_SCRIPT := preload("res://projectile.gd")
+const PROJECTILE_SCENE := preload("res://projectile.tscn")
 
 var target: CharacterBody3D
 var health := 4
@@ -38,23 +38,16 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func _shoot() -> void:
-	var projectile := Node3D.new()
-	projectile.name = "EnemyProjectile"
-	projectile.set_script(PROJECTILE_SCRIPT)
+	var projectile: Node3D = PROJECTILE_SCENE.instantiate()
 	projectile.target = target
 	projectile.position = global_position + Vector3.UP * 0.8
-	var mesh := MeshInstance3D.new()
-	var sphere := SphereMesh.new()
-	sphere.radius = 0.22
-	sphere.height = 0.44
-	mesh.mesh = sphere
 	var material := StandardMaterial3D.new()
 	material.albedo_color = Color("#ff9b4a")
 	material.emission_enabled = true
 	material.emission = Color("#ff522e")
 	material.emission_energy_multiplier = 3.0
-	sphere.material = material
-	projectile.add_child(mesh)
+	var mesh := projectile.get_node("MeshInstance3D") as MeshInstance3D
+	mesh.material_override = material
 	get_parent().add_child(projectile)
 	if is_instance_valid(visual):
 		var tween := create_tween()
