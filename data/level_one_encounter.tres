@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="EncounterData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="EncounterData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://data/encounter_data.gd" id="1_encounter"]
 [ext_resource type="Script" path="res://data/enemy_spawn_data.gd" id="2_spawn"]
+[ext_resource type="Script" path="res://data/encounter_wave_data.gd" id="3_wave"]
 
 [sub_resource type="Resource" id="Spawn_melee"]
 script = ExtResource("2_spawn")
@@ -15,8 +16,13 @@ enemy_name = "Level1Ranged"
 archetype = "ranged"
 spawn_position = Vector3(8, 1.1, -35)
 
+[sub_resource type="Resource" id="Wave_one"]
+script = ExtResource("3_wave")
+display_name = "WAVE 1"
+enemy_spawns = Array[Resource]([SubResource("Spawn_melee"), SubResource("Spawn_ranged")])
+
 [resource]
 script = ExtResource("1_encounter")
 display_name = "LEVEL 1 ENCOUNTER"
 objective = "DEFEAT ALL HOSTILES"
-enemy_spawns = Array[Resource]([SubResource("Spawn_melee"), SubResource("Spawn_ranged")])
+waves = Array[Resource]([SubResource("Wave_one")])

@@ -1,9 +1,16 @@
-[gd_resource type="Resource" script_class="EncounterData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="EncounterData" load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://data/encounter_data.gd" id="1_encounter"]
 [ext_resource type="Script" path="res://data/enemy_spawn_data.gd" id="2_spawn"]
 [ext_resource type="Resource" path="res://data/bruiser_enemy.tres" id="3_bruiser"]
 [ext_resource type="Resource" path="res://data/sniper_enemy.tres" id="4_sniper"]
+[ext_resource type="Script" path="res://data/encounter_wave_data.gd" id="5_wave"]
+
+[sub_resource type="Resource" id="Spawn_melee"]
+script = ExtResource("2_spawn")
+enemy_name = "Level2Melee"
+archetype = "melee"
+spawn_position = Vector3(0, 1.1, -64)
 
 [sub_resource type="Resource" id="Spawn_bruiser"]
 script = ExtResource("2_spawn")
@@ -19,8 +26,23 @@ archetype = "sniper"
 spawn_position = Vector3(5, 1.1, -70)
 enemy_data = ExtResource("4_sniper")
 
+[sub_resource type="Resource" id="Wave_one"]
+script = ExtResource("5_wave")
+display_name = "WAVE 1"
+enemy_spawns = Array[Resource]([SubResource("Spawn_melee")])
+
+[sub_resource type="Resource" id="Wave_two"]
+script = ExtResource("5_wave")
+display_name = "WAVE 2"
+enemy_spawns = Array[Resource]([SubResource("Spawn_sniper")])
+
+[sub_resource type="Resource" id="Wave_three"]
+script = ExtResource("5_wave")
+display_name = "WAVE 3"
+enemy_spawns = Array[Resource]([SubResource("Spawn_bruiser")])
+
 [resource]
 script = ExtResource("1_encounter")
 display_name = "LEVEL 2 ENCOUNTER"
-objective = "DEFEAT THE BRUISER AND SNIPER"
-enemy_spawns = Array[Resource]([SubResource("Spawn_bruiser"), SubResource("Spawn_sniper")])
+objective = "SURVIVE THE INDUSTRIAL GAUNTLET"
+waves = Array[Resource]([SubResource("Wave_one"), SubResource("Wave_two"), SubResource("Wave_three")])
