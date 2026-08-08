@@ -10,6 +10,7 @@ var shot_cooldown := 1.0
 var visual: MeshInstance3D
 var damageable
 var hit_stun := 0.0
+var health_label: Label3D
 
 func _ready() -> void:
 	visual = get_node_or_null("MeshInstance3D")
@@ -19,6 +20,15 @@ func _ready() -> void:
 	damageable.initialize(health)
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
+	health_label = Label3D.new()
+	health_label.name = "HealthLabel"
+	health_label.position = Vector3(0.0, 2.1, 0.0)
+	health_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	health_label.font_size = 32
+	health_label.outline_size = 8
+	health_label.modulate = Color("#e4b9ff")
+	add_child(health_label)
+	_update_health_label()
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
@@ -68,6 +78,7 @@ func receive_damage(info) -> void:
 
 func _on_damaged(info) -> void:
 	health = damageable.health
+	_update_health_label()
 	if info.knockback != Vector3.ZERO:
 		velocity = info.knockback
 		hit_stun = 0.18
@@ -80,6 +91,10 @@ func _on_damaged(info) -> void:
 func _on_died() -> void:
 	get_parent().enemy_defeated()
 	queue_free()
+
+func _update_health_label() -> void:
+	if is_instance_valid(health_label):
+		health_label.text = "HP %d" % health
 
 func _set_visual_color(color: Color) -> void:
 	if not is_instance_valid(visual):

@@ -21,6 +21,8 @@ var energy := 100.0
 var invulnerability_timer := 0.0
 var dodge_timer := 0.0
 var dodge_cooldown := 0.0
+var special_cooldown := 0.0
+var heavy_cooldown := 0.0
 var attack_damage := 1
 var attack_range := 3.0
 var damageable
@@ -57,6 +59,8 @@ func set_character_data(new_data: Resource) -> void:
 	energy = character_data.max_energy
 	attack_damage = character_data.basic_damage
 	attack_range = character_data.basic_range
+	special_cooldown = 0.0
+	heavy_cooldown = 0.0
 	if is_instance_valid(visual):
 		var material := StandardMaterial3D.new()
 		material.albedo_color = character_data.visual_color
@@ -108,18 +112,26 @@ func basic_attack() -> void:
 	_play_action_animation(Color("#8ed8ff"), 1.2)
 
 func use_special() -> void:
-	if energy < character_data.special_cost:
+	if energy < character_data.special_cost or special_cooldown > 0.0:
 		return
 	energy -= character_data.special_cost
+	special_cooldown = character_data.special_cooldown
 	attack_damage = character_data.special_damage
 	attack_range = character_data.special_range
-	attack_component.perform_area_attack(self, attack_range, character_data.special_damage, "special", Vector3(0.0, 0.0, 4.0))
+	if character_data.special_style == "dash":
+		velocity = -transform.basis.z * (character_data.dodge_speed + 4.0)
+		dodge_timer = 0.22
+		invulnerability_timer = 0.32
+		attack_component.perform_area_attack(self, attack_range, character_data.special_damage, "dash", Vector3(0.0, 0.0, 4.0))
+	else:
+		attack_component.perform_area_attack(self, attack_range, character_data.special_damage, "shockwave", Vector3(0.0, 0.0, 4.0))
 	_play_action_animation(Color("#cf9aff"), 1.35)
 
 func use_third_attack() -> void:
-	if energy < character_data.heavy_cost:
+	if energy < character_data.heavy_cost or heavy_cooldown > 0.0:
 		return
 	energy -= character_data.heavy_cost
+	heavy_cooldown = character_data.heavy_cooldown
 	attack_timer = 0.4
 	is_attacking = true
 	attack_damage = character_data.heavy_damage
@@ -166,9 +178,17 @@ func mobile_special() -> void:
 func mobile_dodge() -> void:
 	dodge()
 
+func is_special_ready() -> bool:
+	return special_cooldown <= 0.0 and energy >= character_data.special_cost
+
+func is_heavy_ready() -> bool:
+	return heavy_cooldown <= 0.0 and energy >= character_data.heavy_cost
+
 func _physics_process(delta: float) -> void:
 	invulnerability_timer = maxf(invulnerability_timer - delta, 0.0)
 	dodge_cooldown = maxf(dodge_cooldown - delta, 0.0)
+	special_cooldown = maxf(special_cooldown - delta, 0.0)
+	heavy_cooldown = maxf(heavy_cooldown - delta, 0.0)
 	energy = minf(energy + character_data.energy_regeneration * delta, character_data.max_energy)
 	if attack_timer > 0.0:
 		attack_timer -= delta

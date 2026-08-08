@@ -13,17 +13,41 @@ var joystick_center := Vector2.ZERO
 var attack_center := Vector2.ZERO
 var special_center := Vector2.ZERO
 var dodge_center := Vector2.ZERO
+var attack_label: Label
+var special_label: Label
+var dodge_label: Label
 const JOYSTICK_RADIUS := 86.0
 const ATTACK_RADIUS := 64.0
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process_input(true)
+	attack_label = _create_button_label("ATTACK")
+	special_label = _create_button_label("SPECIAL")
+	dodge_label = _create_button_label("DODGE")
+	_layout_labels()
 	queue_redraw()
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED:
+		_layout_labels()
 		queue_redraw()
+
+func _create_button_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_color_override("font_color", Color.WHITE)
+	add_child(label)
+	return label
+
+func _layout_labels() -> void:
+	if not is_instance_valid(attack_label):
+		return
+	attack_label.position = attack_center - Vector2(28.0, 10.0)
+	special_label.position = special_center - Vector2(32.0, 10.0)
+	dodge_label.position = dodge_center - Vector2(24.0, 10.0)
 
 func _input(event: InputEvent) -> void:
 	var viewport_size := get_viewport_rect().size
@@ -69,6 +93,7 @@ func _draw() -> void:
 	attack_center = Vector2(viewport_size.x - 110.0, viewport_size.y - 125.0)
 	special_center = Vector2(viewport_size.x - 235.0, viewport_size.y - 115.0)
 	dodge_center = Vector2(viewport_size.x - 105.0, viewport_size.y - 275.0)
+	_layout_labels()
 	draw_circle(joystick_center, JOYSTICK_RADIUS, Color(0.1, 0.15, 0.18, 0.45))
 	draw_arc(joystick_center, JOYSTICK_RADIUS, 0.0, TAU, 48, Color(0.5, 0.8, 1.0, 0.7), 3.0)
 	draw_circle(joystick_center + joystick_value * 48.0, 48.0, Color(0.35, 0.7, 1.0, 0.65))
