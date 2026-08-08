@@ -6,6 +6,7 @@ const ALLY_SCENE := preload("res://ally.tscn")
 const MELEE_ENEMY_SCENE := preload("res://melee_enemy.tscn")
 const RANGED_ENEMY_SCENE := preload("res://ranged_enemy.tscn")
 const BOSS_SCENE := preload("res://boss.tscn")
+const DEFAULT_ALLY_DATA := preload("res://data/default_ally.tres")
 
 func create_player(parent: Node, spawn_position: Vector3) -> CharacterBody3D:
 	var player: CharacterBody3D = PLAYER_SCENE.instantiate()
@@ -20,6 +21,7 @@ func create_ally(parent: Node, target: CharacterBody3D, spawn_position: Vector3)
 	ally.name = "Companion"
 	ally.position = spawn_position
 	ally.target = target
+	ally.ally_data = DEFAULT_ALLY_DATA
 	_set_visual_color(ally, Color("#4de0aa"))
 	parent.add_child(ally)
 	return ally
