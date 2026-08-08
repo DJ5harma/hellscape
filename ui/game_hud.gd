@@ -24,10 +24,11 @@ func build() -> void:
 	energy_label = _add_label(Vector2(28, 152), 18, Color("#bd8cff"))
 	ability_label = _add_label(Vector2(28, 178), 18, Color("#d6c4ff"))
 	completion_label = _add_label(Vector2(420, 300), 38, Color("#47d7b0"))
-	completion_label.text = "LEVEL COMPLETE\nPress R to replay"
+	completion_label.text = "LEVEL COMPLETE\nPress N or tap NEXT LEVEL"
 	completion_label.visible = false
 	next_level_button = Button.new()
 	next_level_button.text = "NEXT LEVEL"
+	next_level_button.size = Vector2(220.0, 52.0)
 	next_level_button.custom_minimum_size = Vector2(220.0, 52.0)
 	next_level_button.visible = false
 	next_level_button.pressed.connect(next_level_requested.emit)
@@ -78,6 +79,7 @@ func set_checkpoint(number: int) -> void:
 func show_completion(show_next_level := true) -> void:
 	completion_label.visible = true
 	next_level_button.visible = show_next_level
+	completion_label.text = "LEVEL COMPLETE\nPress N or tap NEXT LEVEL" if show_next_level else "LEVEL COMPLETE\nPress R to replay"
 
 func _add_label(position: Vector2, font_size: int, color: Color) -> Label:
 	var label := Label.new()

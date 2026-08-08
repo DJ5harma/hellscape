@@ -12,8 +12,8 @@ const SCOUT_CHARACTER_DATA := preload("res://data/scout_character.tres")
 
 var checkpoint := 0
 var encounter_complete := false
+var completion_shown := false
 var player: CharacterBody3D
-var encounter_stage := 1
 var remaining_enemies := 2
 var feedback_audio
 var actor_factory
@@ -49,7 +49,6 @@ func _ready() -> void:
 	level.name = "GrayboxLevel"
 	add_child(level)
 	level.checkpoint_reached.connect(_on_checkpoint_entered)
-	level.encounter_entered.connect(_on_encounter_entered)
 	level.exit_reached.connect(_on_exit_entered)
 	level.build()
 	_build_player()
@@ -60,7 +59,7 @@ func _ready() -> void:
 	_build_pause_menu()
 	_build_mobile_controls()
 	hud.next_level_requested.connect(_load_level_two)
-	hud.set_status("LEVEL %d  |  REACH ENCOUNTER 1" % level_number)
+	hud.set_status("LEVEL %d  |  CLEAR THE ENCOUNTER" % level_number)
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
@@ -77,10 +76,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		var selected_data = SCOUT_CHARACTER_DATA if using_scout else DEFAULT_CHARACTER_DATA
 		player.set_character_data(selected_data)
 		hud.set_status("CHARACTER: %s" % selected_data.display_name, selected_data.visual_color)
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_N:
+		_load_level_two()
 
 func _build_pause_menu() -> void:
 	pause_menu = PAUSE_MENU_SCRIPT.new()
 	pause_menu.name = "PauseMenu"
+	pause_menu.layer = 10
 	add_child(pause_menu)
 	pause_menu.restart_requested.connect(_restart_level)
 	pause_menu.sensitivity_changed.connect(_set_camera_sensitivity)
@@ -88,10 +90,12 @@ func _build_pause_menu() -> void:
 	_load_settings()
 
 func _build_player() -> void:
-	player = actor_factory.create_player(self, Vector3(0, 1.1, 5))
+	var spawn_position := Vector3(0, 1.1, 5) if level_number == 1 else Vector3(0, 1.1, -56)
+	player = actor_factory.create_player(self, spawn_position)
 
 func _build_enemy() -> void:
-	_spawn_melee_enemy("TrainingEnemy", Vector3(0, 1.1, -31))
+	var spawn_position := Vector3(0, 1.1, -31) if level_number == 1 else Vector3(-4, 1.1, -66)
+	_spawn_melee_enemy("Level%dMelee" % level_number, spawn_position)
 
 func _build_ally() -> void:
 	actor_factory.create_ally(self, player, Vector3(-2.0, 1.1, 5.5))
@@ -100,7 +104,8 @@ func _spawn_melee_enemy(enemy_name: String, spawn_position: Vector3) -> void:
 	actor_factory.create_melee_enemy(self, enemy_name, player, spawn_position)
 
 func _build_ranged_enemy() -> void:
-	_spawn_ranged_enemy("RangedEnemy", Vector3(8, 1.1, -35))
+	var spawn_position := Vector3(8, 1.1, -35) if level_number == 1 else Vector3(5, 1.1, -70)
+	_spawn_ranged_enemy("Level%dRanged" % level_number, spawn_position)
 
 func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3) -> void:
 	actor_factory.create_ranged_enemy(self, enemy_name, player, spawn_position)
@@ -108,17 +113,19 @@ func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3) -> void:
 func _build_hud() -> void:
 	hud = HUD_SCRIPT.new()
 	hud.name = "GameHUD"
+	hud.layer = 5
 	add_child(hud)
 	hud.build()
 
 func _load_level_two() -> void:
-	if level_number == 1:
+	if level_number == 1 and encounter_complete:
 		get_tree().paused = false
 		get_tree().change_scene_to_file("res://level_2.tscn")
 
 func _build_mobile_controls() -> void:
 	var layer := CanvasLayer.new()
 	layer.name = "MobileControlsLayer"
+	layer.layer = 3
 	add_child(layer)
 	var controls := Control.new()
 	controls.name = "MobileControls"
@@ -162,13 +169,10 @@ func _on_checkpoint_entered(number: int) -> void:
 		player.respawn_position = player.global_position
 		hud.set_checkpoint(checkpoint)
 
-func _on_encounter_entered(number: int) -> void:
-	if number == 1 and encounter_stage == 1 and remaining_enemies > 0:
-		hud.set_status("ENCOUNTER 1  |  DEFEAT BOTH HOSTILES")
-	elif number == 2 and encounter_stage == 2 and remaining_enemies > 0:
-		hud.set_status("ENCOUNTER 2  |  DEFEAT BOTH HOSTILES")
-
 func _on_exit_entered() -> void:
+	if completion_shown:
+		return
+	completion_shown = true
 	if encounter_complete:
 		var completion_text := "EXTRACTION REACHED  |  LEVEL %d COMPLETE" % level_number
 		hud.set_status(completion_text, colors.objective)
@@ -181,23 +185,16 @@ func enemy_defeated() -> void:
 	if remaining_enemies > 0:
 		hud.set_status("ENEMY DEFEATED  |  %d REMAINING" % remaining_enemies)
 		return
-	if encounter_stage == 1:
-		encounter_stage = 2
-		remaining_enemies = 2
-		checkpoint = 4
-		player.respawn_position = Vector3(0, 1.1, -56)
-		hud.set_checkpoint(4)
-		hud.set_status("FIRST AREA CLEAR  |  GATE OPENING")
+	encounter_complete = true
+	completion_shown = true
+	if level_number == 1:
+		hud.set_status("LEVEL 1 COMPLETE  |  SELECT NEXT LEVEL", colors.objective)
 		level.open_gate("LockedGate")
-		_spawn_second_encounter()
-	elif encounter_stage == 2:
-		encounter_complete = true
-		hud.set_status("ALL AREAS CLEAR  |  FINAL GATE OPENING", colors.objective)
+		hud.show_completion(true)
+	else:
+		hud.set_status("LEVEL 2 COMPLETE  |  EXTRACTION AVAILABLE", colors.objective)
 		level.open_gate("FinalGate")
-
-func _spawn_second_encounter() -> void:
-	_spawn_melee_enemy("SecondMelee", Vector3(-4, 1.1, -66))
-	_spawn_ranged_enemy("SecondRanged", Vector3(5, 1.1, -70))
+		hud.show_completion(false)
 
 func play_feedback(frequency: float, duration: float) -> void:
 	feedback_audio.play_tone(frequency, duration)

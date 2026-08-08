@@ -29,7 +29,7 @@ func build() -> void:
 	_add_checkpoint(Vector3(0, 0.2, -45), 3)
 	_add_encounter_trigger(Vector3(0, 1.5, -25), 1)
 	_add_encounter_trigger(Vector3(0, 1.5, -62), 2)
-	_add_exit_trigger(Vector3(0, 1.5, -78))
+	_add_exit_trigger(Vector3(0, 1.5, -75.5))
 
 func _build_lighting() -> void:
 	var world_environment := WorldEnvironment.new()
