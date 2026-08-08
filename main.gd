@@ -65,7 +65,11 @@ func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
 		hud.update_player(player)
 		if is_instance_valid(mobile_controls):
-			mobile_controls.set_ability_state(player.is_special_ready(), player.is_dodge_ready())
+			mobile_controls.set_ability_state(
+				player.is_special_ready(),
+				player.is_dodge_ready(),
+				player.is_heavy_ready()
+			)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
@@ -138,6 +142,8 @@ func _build_mobile_controls() -> void:
 	controls.attack_pressed.connect(player.mobile_attack)
 	controls.special_pressed.connect(player.mobile_special)
 	controls.dodge_pressed.connect(player.mobile_dodge)
+	controls.jump_pressed.connect(player.request_jump)
+	controls.heavy_pressed.connect(player.mobile_heavy)
 	controls.pause_pressed.connect(pause_menu.toggle)
 
 func _set_camera_sensitivity(value: float) -> void:

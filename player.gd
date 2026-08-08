@@ -23,6 +23,8 @@ var dodge_timer := 0.0
 var dodge_cooldown := 0.0
 var special_cooldown := 0.0
 var heavy_cooldown := 0.0
+var jump_buffer_timer := 0.0
+var jump_requested := false
 var attack_damage := 1
 var attack_range := 3.0
 var damageable
@@ -83,7 +85,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_3:
 		use_third_attack()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
-		jump()
+		request_jump()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_SHIFT:
 		dodge()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
@@ -137,9 +139,11 @@ func use_third_attack() -> void:
 	attack_component.perform_area_attack(self, attack_range, character_data.heavy_damage, "heavy", Vector3(0.0, 0.0, 8.0))
 	_play_action_animation(Color("#ffd36b"), 1.5)
 
+func request_jump() -> void:
+	jump_requested = true
+
 func jump() -> void:
-	if is_on_floor() and dodge_timer <= 0.0:
-		velocity.y = character_data.jump_velocity
+	request_jump()
 
 func dodge() -> void:
 	if dodge_cooldown > 0.0 or dodge_timer > 0.0:
@@ -176,6 +180,12 @@ func mobile_special() -> void:
 func mobile_dodge() -> void:
 	dodge()
 
+func mobile_jump() -> void:
+	request_jump()
+
+func mobile_heavy() -> void:
+	use_third_attack()
+
 func is_special_ready() -> bool:
 	return special_cooldown <= 0.0 and energy >= character_data.special_cost
 
@@ -190,15 +200,25 @@ func _physics_process(delta: float) -> void:
 	dodge_cooldown = maxf(dodge_cooldown - delta, 0.0)
 	special_cooldown = maxf(special_cooldown - delta, 0.0)
 	heavy_cooldown = maxf(heavy_cooldown - delta, 0.0)
+	jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 	energy = minf(energy + character_data.energy_regeneration * delta, character_data.max_energy)
 	if attack_timer > 0.0:
 		attack_timer -= delta
 	else:
 		is_attacking = false
+	if jump_requested:
+		jump_requested = false
+		jump_buffer_timer = 0.15
 	if dodge_timer > 0.0:
 		dodge_timer -= delta
 		move_and_slide()
 		return
+	var jumped_this_frame := false
+	if jump_buffer_timer > 0.0 and is_on_floor():
+		jump_buffer_timer = 0.0
+		if dodge_timer <= 0.0:
+			velocity.y = character_data.jump_velocity
+			jumped_this_frame = true
 	var input_2d := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	if mobile_move.length() > 0.05:
 		input_2d = mobile_move
@@ -216,7 +236,7 @@ func _physics_process(delta: float) -> void:
 	var target_velocity: Vector3 = direction * float(character_data.move_speed)
 	velocity.x = move_toward(velocity.x, target_velocity.x, character_data.acceleration * delta)
 	velocity.z = move_toward(velocity.z, target_velocity.z, character_data.acceleration * delta)
-	if not is_on_floor():
+	if jumped_this_frame or not is_on_floor():
 		velocity.y -= character_data.gravity * delta
 	else:
 		velocity.y = -0.2
