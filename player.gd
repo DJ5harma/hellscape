@@ -87,7 +87,13 @@ func basic_attack() -> void:
 	is_attacking = true
 	attack_damage = character_data.basic_damage
 	attack_range = character_data.basic_range
+	_damage_nearby_enemies(attack_range, attack_damage)
 	_play_action_animation(Color("#8ed8ff"), 1.2)
+
+func _damage_nearby_enemies(range: float, damage: int) -> void:
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < range:
+			enemy.take_damage(damage)
 
 func use_special() -> void:
 	if energy < character_data.special_cost:
@@ -132,12 +138,19 @@ func dodge() -> void:
 func _play_action_animation(action_color: Color, scale_amount: float) -> void:
 	if not is_instance_valid(visual):
 		return
-	visual.modulate = action_color
+	_set_visual_color(action_color)
 	var tween := create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(visual, "scale", Vector3(scale_amount, 2.0 - scale_amount * 0.4, scale_amount), 0.08)
-	tween.tween_property(visual, "modulate", Color.WHITE, 0.22)
+	tween.tween_method(_set_visual_color, action_color, character_data.visual_color, 0.22)
 	tween.chain().tween_property(visual, "scale", Vector3.ONE, 0.12)
+
+func _set_visual_color(color: Color) -> void:
+	var material := visual.material_override as StandardMaterial3D
+	if material == null:
+		material = StandardMaterial3D.new()
+		visual.material_override = material
+	material.albedo_color = color
 
 func mobile_special() -> void:
 	use_special()

@@ -18,10 +18,6 @@ func _physics_process(delta: float) -> void:
 	attack_windup = maxf(attack_windup - delta, 0.0)
 	var offset := target.global_position - global_position
 	offset.y = 0.0
-	if target.is_attacking and offset.length() < target.attack_range and attack_cooldown == 0.0:
-		take_damage(target.attack_damage)
-		attack_cooldown = 0.35
-		return
 	if offset.length() > 1.7:
 		velocity = offset.normalized() * speed
 		look_at(global_position + Vector3(offset.x, 0.0, offset.z), Vector3.UP)
@@ -33,23 +29,30 @@ func _physics_process(delta: float) -> void:
 		if attack_pending:
 			attack_pending = false
 			target.take_damage(10)
-			if is_instance_valid(visual):
-				visual.modulate = Color.WHITE
+			_set_visual_color(Color("#d84c5c"))
 		elif attack_cooldown == 0.0:
 			attack_windup = 0.25
 			attack_pending = true
 			attack_cooldown = 1.0
-			if is_instance_valid(visual):
-				visual.modulate = Color("#ffdf62")
+			_set_visual_color(Color("#ffdf62"))
 	move_and_slide()
 
 func take_damage(amount: int) -> void:
 	health -= amount
 	get_parent().play_feedback(220.0, 0.08)
 	if is_instance_valid(visual):
-		visual.modulate = Color.WHITE
+		_set_visual_color(Color.WHITE)
 		var tween := create_tween()
-		tween.tween_property(visual, "modulate", Color("#d84c5c"), 0.18)
+		tween.tween_method(_set_visual_color, Color.WHITE, Color("#d84c5c"), 0.18)
 	if health <= 0:
 		get_parent().enemy_defeated()
 		queue_free()
+
+func _set_visual_color(color: Color) -> void:
+	if not is_instance_valid(visual):
+		return
+	var material := visual.material_override as StandardMaterial3D
+	if material == null:
+		material = StandardMaterial3D.new()
+		visual.material_override = material
+	material.albedo_color = color
