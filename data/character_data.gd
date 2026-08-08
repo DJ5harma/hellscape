@@ -23,6 +23,7 @@ class_name CharacterData
 @export var energy_regeneration := 10.0
 
 @export_category("Abilities")
+@export var mobile_actions: Array[String] = ["special", "heavy"]
 @export var basic_damage := 1
 @export var basic_range := 3.0
 @export var special_cost := 35.0

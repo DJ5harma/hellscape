@@ -22,6 +22,7 @@ basic_range = 3.4
 special_cost = 30.0
 special_cooldown = 0.6
 special_style = "dash"
+mobile_actions = ["special"]
 special_damage = 2
 special_range = 5.5
 heavy_cost = 55.0

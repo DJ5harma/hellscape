@@ -34,6 +34,7 @@ var pause_button: Button
 var special_ready := true
 var dodge_ready := true
 var heavy_ready := true
+var enabled_actions: Array[String] = ["special", "heavy"]
 var ui_scale := 1.0
 var joystick_radius := JOYSTICK_RADIUS
 var button_radius := ATTACK_RADIUS
@@ -64,6 +65,16 @@ func _ready() -> void:
 func _on_viewport_resized() -> void:
 	_update_layout()
 	_layout_labels()
+	queue_redraw()
+
+func configure_actions(actions: Array[String]) -> void:
+	enabled_actions = actions.duplicate()
+	if is_instance_valid(special_button):
+		special_button.visible = "special" in enabled_actions
+		special_label.visible = "special" in enabled_actions
+	if is_instance_valid(heavy_button):
+		heavy_button.visible = "heavy" in enabled_actions
+		heavy_label.visible = "heavy" in enabled_actions
 	queue_redraw()
 
 func _create_button_label(text: String) -> Label:
@@ -168,14 +179,16 @@ func _input(event: InputEvent) -> void:
 			look_changed.emit(event.relative)
 
 func _is_action_button_position(position: Vector2) -> bool:
-	return (
-		position.distance_to(attack_center) <= button_radius * 1.2
-		or position.distance_to(special_center) <= button_radius * 1.2
-		or position.distance_to(dodge_center) <= button_radius * 1.2
-		or position.distance_to(jump_center) <= button_radius * 1.2
-		or position.distance_to(heavy_center) <= button_radius * 1.2
-		or position.distance_to(pause_center) <= 32.0 * ui_scale
-	)
+	var hit_centers := [attack_center, dodge_center, jump_center, pause_center]
+	if "special" in enabled_actions:
+		hit_centers.append(special_center)
+	if "heavy" in enabled_actions:
+		hit_centers.append(heavy_center)
+	for center in hit_centers:
+		var radius := 32.0 * ui_scale if center == pause_center else button_radius * 1.2
+		if position.distance_to(center) <= radius:
+			return true
+	return false
 
 func _update_joystick(position: Vector2) -> void:
 	var offset := position - joystick_center
@@ -191,16 +204,18 @@ func _draw() -> void:
 	draw_circle(joystick_center + joystick_value * 48.0 * ui_scale, 48.0 * ui_scale, Color(0.35, 0.7, 1.0, 0.65))
 	draw_circle(attack_center, button_radius, Color(0.85, 0.25, 0.3, 0.65))
 	draw_arc(attack_center, button_radius, 0.0, TAU, 48, Color(1.0, 0.8, 0.7, 0.9), 3.0 * ui_scale)
-	var special_color := Color(0.55, 0.3, 0.85, 0.65) if special_ready else Color(0.25, 0.2, 0.3, 0.5)
-	draw_circle(special_center, button_radius, special_color)
-	draw_arc(special_center, button_radius, 0.0, TAU, 48, Color(0.85, 0.75, 1.0, 0.9), 3.0 * ui_scale)
+	if "special" in enabled_actions:
+		var special_color := Color(0.55, 0.3, 0.85, 0.65) if special_ready else Color(0.25, 0.2, 0.3, 0.5)
+		draw_circle(special_center, button_radius, special_color)
+		draw_arc(special_center, button_radius, 0.0, TAU, 48, Color(0.85, 0.75, 1.0, 0.9), 3.0 * ui_scale)
 	var dodge_color := Color(0.85, 0.65, 0.25, 0.65) if dodge_ready else Color(0.3, 0.25, 0.15, 0.5)
 	draw_circle(dodge_center, button_radius, dodge_color)
 	draw_arc(dodge_center, button_radius, 0.0, TAU, 48, Color(1.0, 0.9, 0.6, 0.9), 3.0 * ui_scale)
 	draw_circle(jump_center, button_radius, Color(0.25, 0.65, 0.48, 0.65))
 	draw_arc(jump_center, button_radius, 0.0, TAU, 48, Color(0.7, 1.0, 0.8, 0.9), 3.0 * ui_scale)
-	var heavy_color := Color(0.75, 0.45, 0.2, 0.65) if heavy_ready else Color(0.3, 0.2, 0.12, 0.5)
-	draw_circle(heavy_center, button_radius, heavy_color)
-	draw_arc(heavy_center, button_radius, 0.0, TAU, 48, Color(1.0, 0.8, 0.5, 0.9), 3.0 * ui_scale)
+	if "heavy" in enabled_actions:
+		var heavy_color := Color(0.75, 0.45, 0.2, 0.65) if heavy_ready else Color(0.3, 0.2, 0.12, 0.5)
+		draw_circle(heavy_center, button_radius, heavy_color)
+		draw_arc(heavy_center, button_radius, 0.0, TAU, 48, Color(1.0, 0.8, 0.5, 0.9), 3.0 * ui_scale)
 	draw_circle(pause_center, 32.0 * ui_scale, Color(0.2, 0.25, 0.3, 0.75))
 	draw_arc(pause_center, 32.0 * ui_scale, 0.0, TAU, 32, Color(0.75, 0.85, 0.95, 0.9), 2.0 * ui_scale)

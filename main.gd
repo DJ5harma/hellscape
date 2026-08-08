@@ -79,6 +79,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		using_scout = not using_scout
 		var selected_data = SCOUT_CHARACTER_DATA if using_scout else DEFAULT_CHARACTER_DATA
 		player.set_character_data(selected_data)
+		mobile_controls.configure_actions(selected_data.mobile_actions)
 		hud.set_status("CHARACTER: %s" % selected_data.display_name, selected_data.visual_color)
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_N:
 		_load_level_two()
@@ -137,6 +138,7 @@ func _build_mobile_controls() -> void:
 	controls.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(controls)
 	mobile_controls = controls
+	controls.configure_actions(player.character_data.mobile_actions)
 	controls.movement_changed.connect(player.set_mobile_move)
 	controls.look_changed.connect(player.apply_mobile_look)
 	controls.attack_pressed.connect(player.mobile_attack)
