@@ -1,30 +1,69 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://data/character_data.gd" id="1_data"]
+[ext_resource type="Script" path="res://data/action_data.gd" id="2_action"]
+
+[sub_resource type="Resource" id="Action_basic"]
+script = ExtResource("2_action")
+action_id = "basic"
+display_name = "HAMMER SWING"
+style = "melee"
+damage = 2
+range = 3.2
+arc_degrees = 140.0
+knockback = 4.0
+
+[sub_resource type="Resource" id="Action_special"]
+script = ExtResource("2_action")
+action_id = "special"
+display_name = "IRON GUARD"
+style = "guard"
+damage = 0
+range = 0.0
+arc_degrees = 360.0
+energy_cost = 35.0
+cooldown = 1.1
+knockback = 0.0
+
+[sub_resource type="Resource" id="Action_heavy"]
+script = ExtResource("2_action")
+action_id = "heavy"
+display_name = "CRUSHING BLOW"
+style = "melee"
+damage = 6
+range = 4.0
+arc_degrees = 130.0
+energy_cost = 55.0
+cooldown = 1.8
+knockback = 12.0
 
 [resource]
 script = ExtResource("1_data")
-display_name = "Prototype Fighter"
-visual_color = Color(0.333333, 0.717647, 1, 1)
-move_speed = 7.0
-acceleration = 24.0
+display_name = "Juggernaut"
+visual_color = Color(0.72, 0.3, 0.22, 1)
+move_speed = 5.2
+acceleration = 18.0
 gravity = 22.0
 jump_velocity = 9.0
-dodge_speed = 13.0
-dodge_duration = 0.28
-dodge_cooldown = 1.0
-max_health = 100
-dodge_invulnerability = 0.38
+dodge_speed = 10.0
+dodge_duration = 0.24
+dodge_cooldown = 1.3
+max_health = 180
+dodge_invulnerability = 0.3
+knockback_resistance = 0.7
 max_energy = 100.0
-energy_regeneration = 10.0
-basic_damage = 1
-basic_range = 3.0
+energy_regeneration = 8.0
+basic_action = SubResource("Action_basic")
+special_action = SubResource("Action_special")
+heavy_action = SubResource("Action_heavy")
+basic_damage = 2
+basic_range = 3.2
 special_cost = 35.0
-special_cooldown = 0.8
+special_cooldown = 1.1
 special_style = "shockwave"
-special_damage = 2
+special_damage = 4
 special_range = 5.0
-heavy_cost = 60.0
-heavy_cooldown = 1.4
-heavy_damage = 3
-heavy_range = 7.0
+heavy_cost = 55.0
+heavy_cooldown = 1.8
+heavy_damage = 6
+heavy_range = 4.0

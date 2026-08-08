@@ -67,8 +67,11 @@ func _on_viewport_resized() -> void:
 	_layout_labels()
 	queue_redraw()
 
-func configure_actions(actions: Array[String]) -> void:
+func configure_actions(actions: Array[String], character_data: Resource = null) -> void:
 	enabled_actions = actions.duplicate()
+	if character_data != null:
+		special_label.text = character_data.special_action.display_name
+		heavy_label.text = character_data.heavy_action.display_name
 	if is_instance_valid(special_button):
 		special_button.visible = "special" in enabled_actions
 		special_label.visible = "special" in enabled_actions

@@ -1,6 +1,42 @@
-[gd_resource type="Resource" script_class="CharacterData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="CharacterData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://data/character_data.gd" id="1_data"]
+[ext_resource type="Script" path="res://data/action_data.gd" id="2_action"]
+
+[sub_resource type="Resource" id="Action_basic"]
+script = ExtResource("2_action")
+action_id = "basic"
+display_name = "QUICK STRIKE"
+style = "melee"
+damage = 2
+range = 3.8
+arc_degrees = 100.0
+cooldown = 0.15
+knockback = 2.0
+
+[sub_resource type="Resource" id="Action_special"]
+script = ExtResource("2_action")
+action_id = "special"
+display_name = "DASH STRIKE"
+style = "dash"
+damage = 4
+range = 5.5
+arc_degrees = 85.0
+energy_cost = 30.0
+cooldown = 0.65
+knockback = 5.0
+
+[sub_resource type="Resource" id="Action_heavy"]
+script = ExtResource("2_action")
+action_id = "heavy"
+display_name = "RAPID BLOW"
+style = "melee"
+damage = 3
+range = 4.0
+arc_degrees = 90.0
+energy_cost = 45.0
+cooldown = 1.0
+knockback = 3.0
 
 [resource]
 script = ExtResource("1_data")
@@ -15,6 +51,7 @@ dodge_duration = 0.32
 dodge_cooldown = 0.7
 max_health = 75
 dodge_invulnerability = 0.42
+knockback_resistance = 0.0
 max_energy = 120.0
 energy_regeneration = 14.0
 basic_damage = 1
@@ -23,6 +60,9 @@ special_cost = 30.0
 special_cooldown = 0.6
 special_style = "dash"
 mobile_actions = ["special"]
+basic_action = SubResource("Action_basic")
+special_action = SubResource("Action_special")
+heavy_action = SubResource("Action_heavy")
 special_damage = 2
 special_range = 5.5
 heavy_cost = 55.0

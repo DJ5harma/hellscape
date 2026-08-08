@@ -9,6 +9,7 @@ var help_label: Label
 var health_label: Label
 var energy_label: Label
 var ability_label: Label
+var reticle_label: Label
 var completion_label: Label
 var next_level_button: Button
 
@@ -23,6 +24,9 @@ func build() -> void:
 	health_label = _add_label(Vector2(28, 126), 18, Color("#ff7777"))
 	energy_label = _add_label(Vector2(28, 152), 18, Color("#bd8cff"))
 	ability_label = _add_label(Vector2(28, 178), 18, Color("#d6c4ff"))
+	reticle_label = _add_label(Vector2.ZERO, 24, Color(1.0, 1.0, 1.0, 0.8))
+	reticle_label.text = "+"
+	reticle_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	completion_label = _add_label(Vector2(420, 300), 38, Color("#47d7b0"))
 	completion_label.text = "LEVEL COMPLETE\nPress N or tap NEXT LEVEL"
 	completion_label.visible = false
@@ -60,6 +64,12 @@ func _layout() -> void:
 		maxf((viewport_size.x - next_level_button.size.x * scale) * 0.5, margin),
 		completion_label.position.y + completion_label.size.y * scale + 18.0 * scale
 	)
+	reticle_label.scale = Vector2.ONE * scale
+	reticle_label.size = Vector2(32.0, 32.0)
+	reticle_label.position = Vector2(
+		(viewport_size.x - reticle_label.size.x * scale) * 0.5,
+		(viewport_size.y - reticle_label.size.y * scale) * 0.5
+	)
 
 func update_player(player: Node) -> void:
 	if is_instance_valid(player):
@@ -67,7 +77,12 @@ func update_player(player: Node) -> void:
 		energy_label.text = "ENERGY %d / 100" % roundi(player.energy)
 		var special_state := "READY" if player.is_special_ready() else "WAIT"
 		var heavy_state := "READY" if player.is_heavy_ready() else "WAIT"
-		ability_label.text = "SPECIAL [2] %s  |  HEAVY [3] %s" % [special_state, heavy_state]
+		ability_label.text = "%s [2] %s  |  %s [3] %s" % [
+			player.special_action.display_name,
+			special_state,
+			player.heavy_action.display_name,
+			heavy_state
+		]
 
 func set_status(message: String, color := Color.WHITE) -> void:
 	status_label.text = message

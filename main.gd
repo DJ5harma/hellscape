@@ -7,8 +7,9 @@ const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
 const LEVEL_TWO_SCRIPT := preload("res://level/level_2.gd")
 const HUD_SCRIPT := preload("res://ui/game_hud.gd")
 const PAUSE_MENU_SCRIPT := preload("res://ui/pause_menu.gd")
-const DEFAULT_CHARACTER_DATA := preload("res://data/default_character.tres")
+const JUGGERNAUT_CHARACTER_DATA := preload("res://data/juggernaut_character.tres")
 const SCOUT_CHARACTER_DATA := preload("res://data/scout_character.tres")
+const MARKSMAN_CHARACTER_DATA := preload("res://data/marksman_character.tres")
 
 var checkpoint := 0
 var encounter_complete := false
@@ -21,7 +22,8 @@ var level
 var hud
 var mobile_controls
 var pause_menu
-var using_scout := false
+var character_roster: Array[CharacterData] = []
+var selected_character_index := 0
 var settings := ConfigFile.new()
 const SETTINGS_PATH := "user://hellscape.cfg"
 
@@ -38,6 +40,7 @@ var colors := {
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	character_roster = [JUGGERNAUT_CHARACTER_DATA, SCOUT_CHARACTER_DATA, MARKSMAN_CHARACTER_DATA]
 	feedback_audio = FEEDBACK_AUDIO_SCRIPT.new()
 	feedback_audio.name = "FeedbackAudio"
 	add_child(feedback_audio)
@@ -59,7 +62,7 @@ func _ready() -> void:
 	_build_pause_menu()
 	_build_mobile_controls()
 	hud.next_level_requested.connect(_load_level_two)
-	hud.set_status("LEVEL %d  |  CLEAR THE ENCOUNTER" % level_number)
+	hud.set_status("LEVEL %d  |  %s  |  CLEAR THE ENCOUNTER" % [level_number, player.character_data.display_name])
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
@@ -76,10 +79,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		pause_menu.toggle()
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
-		using_scout = not using_scout
-		var selected_data = SCOUT_CHARACTER_DATA if using_scout else DEFAULT_CHARACTER_DATA
+		selected_character_index = (selected_character_index + 1) % character_roster.size()
+		var selected_data: CharacterData = character_roster[selected_character_index]
 		player.set_character_data(selected_data)
-		mobile_controls.configure_actions(selected_data.mobile_actions)
+		mobile_controls.configure_actions(selected_data.mobile_actions, selected_data)
 		hud.set_status("CHARACTER: %s" % selected_data.display_name, selected_data.visual_color)
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_N:
 		_load_level_two()
@@ -138,7 +141,7 @@ func _build_mobile_controls() -> void:
 	controls.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(controls)
 	mobile_controls = controls
-	controls.configure_actions(player.character_data.mobile_actions)
+	controls.configure_actions(player.character_data.mobile_actions, player.character_data)
 	controls.movement_changed.connect(player.set_mobile_move)
 	controls.look_changed.connect(player.apply_mobile_look)
 	controls.attack_pressed.connect(player.mobile_attack)
