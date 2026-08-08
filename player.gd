@@ -8,6 +8,7 @@ extends CharacterBody3D
 
 var camera_pivot: Node3D
 var camera: Camera3D
+var visual: MeshInstance3D
 var yaw := 0.0
 var pitch := -0.22
 var health := 100
@@ -31,6 +32,7 @@ func _ready() -> void:
 	camera_pivot.add_child(camera)
 	camera.current = true
 	respawn_position = global_position
+	visual = get_node_or_null("MeshInstance3D")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -43,8 +45,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventMouseButton and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_1:
-		attack_timer = 0.25
-		is_attacking = true
+		basic_attack()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_2:
 		use_special()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_3:
@@ -66,13 +67,18 @@ func apply_mobile_look(delta: Vector2) -> void:
 	camera_pivot.rotation.x = pitch
 
 func mobile_attack() -> void:
+	basic_attack()
+
+func basic_attack() -> void:
 	attack_timer = 0.25
 	is_attacking = true
+	_play_action_animation(Color("#8ed8ff"), 1.2)
 
 func use_special() -> void:
 	if energy < 35.0:
 		return
 	energy -= 35.0
+	_play_action_animation(Color("#cf9aff"), 1.35)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < 5.0:
 			enemy.take_damage(2)
@@ -83,6 +89,7 @@ func use_third_attack() -> void:
 	energy -= 60.0
 	attack_timer = 0.4
 	is_attacking = true
+	_play_action_animation(Color("#ffd36b"), 1.5)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < 7.0:
 			enemy.take_damage(3)
@@ -101,6 +108,17 @@ func dodge() -> void:
 	if mobile_move.length() > 0.05:
 		dodge_direction = (transform.basis * Vector3(mobile_move.x, 0.0, mobile_move.y)).normalized()
 	velocity = dodge_direction * 13.0
+	_play_action_animation(Color("#fff0a1"), 0.8)
+
+func _play_action_animation(action_color: Color, scale_amount: float) -> void:
+	if not is_instance_valid(visual):
+		return
+	visual.modulate = action_color
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(visual, "scale", Vector3(scale_amount, 2.0 - scale_amount * 0.4, scale_amount), 0.08)
+	tween.tween_property(visual, "modulate", Color.WHITE, 0.22)
+	tween.chain().tween_property(visual, "scale", Vector3.ONE, 0.12)
 
 func mobile_special() -> void:
 	use_special()
@@ -146,6 +164,8 @@ func _physics_process(delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if invulnerability_timer > 0.0:
 		return
+	get_parent().play_feedback(110.0, 0.12)
+	_play_action_animation(Color("#ff6464"), 0.85)
 	health -= amount
 	if health <= 0:
 		global_position = respawn_position

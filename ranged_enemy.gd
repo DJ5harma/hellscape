@@ -6,6 +6,10 @@ var target: CharacterBody3D
 var health := 4
 var shot_cooldown := 1.0
 var hit_cooldown := 0.0
+var visual: MeshInstance3D
+
+func _ready() -> void:
+	visual = get_node_or_null("MeshInstance3D")
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
@@ -27,6 +31,8 @@ func _physics_process(delta: float) -> void:
 	if offset.length() < 20.0:
 		look_at(global_position + Vector3(offset.x, 0.0, offset.z), Vector3.UP)
 		if shot_cooldown == 0.0:
+			if is_instance_valid(visual):
+				visual.modulate = Color("#ffdf62")
 			_shoot()
 			shot_cooldown = 2.0
 	move_and_slide()
@@ -50,9 +56,17 @@ func _shoot() -> void:
 	sphere.material = material
 	projectile.add_child(mesh)
 	get_parent().add_child(projectile)
+	if is_instance_valid(visual):
+		var tween := create_tween()
+		tween.tween_property(visual, "modulate", Color("#a65de0"), 0.2)
 
 func take_damage(amount: int) -> void:
 	health -= amount
+	get_parent().play_feedback(420.0, 0.08)
+	if is_instance_valid(visual):
+		visual.modulate = Color.WHITE
+		var tween := create_tween()
+		tween.tween_property(visual, "modulate", Color("#a65de0"), 0.18)
 	if health <= 0:
 		get_parent().enemy_defeated()
 		queue_free()
