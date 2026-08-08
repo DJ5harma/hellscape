@@ -12,6 +12,7 @@ var volume_slider: HSlider
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	get_viewport().size_changed.connect(_layout)
 	_build()
 	set_open(false)
 
@@ -22,7 +23,6 @@ func _build() -> void:
 	add_child(overlay)
 
 	panel = PanelContainer.new()
-	panel.position = Vector2(460, 180)
 	panel.size = Vector2(360, 360)
 	overlay.add_child(panel)
 	var content := VBoxContainer.new()
@@ -68,6 +68,17 @@ func _build() -> void:
 	restart_button.custom_minimum_size.y = 48
 	restart_button.pressed.connect(restart_requested.emit)
 	content.add_child(restart_button)
+	_layout()
+
+func _layout() -> void:
+	if not is_instance_valid(panel):
+		return
+	var viewport_size := get_viewport().get_visible_rect().size
+	panel.size.x = minf(360.0, maxf(viewport_size.x - 32.0, 260.0))
+	panel.position = Vector2(
+		(viewport_size.x - panel.size.x) * 0.5,
+		maxf((viewport_size.y - panel.size.y) * 0.5, 16.0)
+	)
 
 func set_open(open: bool) -> void:
 	visible = open

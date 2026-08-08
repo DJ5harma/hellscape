@@ -45,6 +45,7 @@ func _ready() -> void:
 	level.name = "GrayboxLevel"
 	add_child(level)
 	level.checkpoint_reached.connect(_on_checkpoint_entered)
+	level.encounter_entered.connect(_on_encounter_entered)
 	level.exit_reached.connect(_on_exit_entered)
 	level.build()
 	_build_player()
@@ -54,6 +55,7 @@ func _ready() -> void:
 	_build_hud()
 	_build_pause_menu()
 	_build_mobile_controls()
+	hud.set_status("REACH ENCOUNTER 1  |  CLEAR BOTH HOSTILES")
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
@@ -149,6 +151,12 @@ func _on_checkpoint_entered(number: int) -> void:
 		checkpoint = number
 		player.respawn_position = player.global_position
 		hud.set_checkpoint(checkpoint)
+
+func _on_encounter_entered(number: int) -> void:
+	if number == 1 and encounter_stage == 1 and remaining_enemies > 0:
+		hud.set_status("ENCOUNTER 1  |  DEFEAT BOTH HOSTILES")
+	elif number == 2 and encounter_stage == 2 and remaining_enemies > 0:
+		hud.set_status("ENCOUNTER 2  |  DEFEAT BOTH HOSTILES")
 
 func _on_exit_entered() -> void:
 	if encounter_complete:

@@ -10,6 +10,7 @@ const INDICATOR_SCENE := preload("res://assets/environment/kenney/kenney_factory
 
 signal checkpoint_reached(number: int)
 signal exit_reached
+signal encounter_entered(number: int)
 
 var colors := {
 	"floor": Color("#38434a"),
@@ -26,6 +27,8 @@ func build() -> void:
 	_add_checkpoint(Vector3(0, 0.2, -8), 1)
 	_add_checkpoint(Vector3(0, 0.2, -25), 2)
 	_add_checkpoint(Vector3(0, 0.2, -45), 3)
+	_add_encounter_trigger(Vector3(0, 1.5, -25), 1)
+	_add_encounter_trigger(Vector3(0, 1.5, -62), 2)
 	_add_exit_trigger(Vector3(0, 1.5, -78))
 
 func _build_lighting() -> void:
@@ -239,7 +242,25 @@ func _add_checkpoint(position: Vector3, number: int) -> void:
 	box.size = Vector3(8, 3, 2)
 	shape.shape = box
 	area.add_child(shape)
-	area.body_entered.connect(func(_body: Node3D) -> void: checkpoint_reached.emit(number))
+	area.body_entered.connect(func(body: Node3D) -> void:
+		if body.name == "Player":
+			checkpoint_reached.emit(number)
+	)
+	add_child(area)
+
+func _add_encounter_trigger(position: Vector3, number: int) -> void:
+	var area := Area3D.new()
+	area.name = "EncounterTrigger_%d" % number
+	area.position = position
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(12, 3, 10)
+	shape.shape = box
+	area.add_child(shape)
+	area.body_entered.connect(func(body: Node3D) -> void:
+		if body.name == "Player":
+			encounter_entered.emit(number)
+	)
 	add_child(area)
 
 func _add_exit_trigger(position: Vector3) -> void:
@@ -251,5 +272,8 @@ func _add_exit_trigger(position: Vector3) -> void:
 	box.size = Vector3(8, 4, 2)
 	shape.shape = box
 	area.add_child(shape)
-	area.body_entered.connect(func(_body: Node3D) -> void: exit_reached.emit())
+	area.body_entered.connect(func(body: Node3D) -> void:
+		if body.name == "Player":
+			exit_reached.emit()
+	)
 	add_child(area)
