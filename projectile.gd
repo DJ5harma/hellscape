@@ -13,7 +13,7 @@ var direction := Vector3.ZERO
 var projectile_color := Color.WHITE
 var direction_initialized := false
 
-func configure(
+func configure_target_shot(
 	new_target: CharacterBody3D,
 	new_damage: int,
 	new_source: Node,

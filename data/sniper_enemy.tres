@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/enemy_data.gd" id="1_enemy"]
+
+[resource]
+script = ExtResource("1_enemy")
+display_name = "Sniper"
+archetype = "sniper"
+max_health = 3
+move_speed = 1.2
+projectile_damage = 22
+projectile_speed = 18.0
+projectile_lifetime = 3.0
+shot_cooldown = 3.0
+preferred_min_range = 10.0
+preferred_max_range = 18.0
+visual_color = Color(0.95, 0.2, 0.35, 1)

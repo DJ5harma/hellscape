@@ -10,6 +10,8 @@ const PAUSE_MENU_SCRIPT := preload("res://ui/pause_menu.gd")
 const JUGGERNAUT_CHARACTER_DATA := preload("res://data/juggernaut_character.tres")
 const SCOUT_CHARACTER_DATA := preload("res://data/scout_character.tres")
 const MARKSMAN_CHARACTER_DATA := preload("res://data/marksman_character.tres")
+const BRUISER_ENEMY_DATA := preload("res://data/bruiser_enemy.tres")
+const SNIPER_ENEMY_DATA := preload("res://data/sniper_enemy.tres")
 
 var checkpoint := 0
 var encounter_complete := false
@@ -104,20 +106,22 @@ func _build_player() -> void:
 
 func _build_enemy() -> void:
 	var spawn_position := Vector3(0, 1.1, -31) if level_number == 1 else Vector3(-4, 1.1, -66)
-	_spawn_melee_enemy("Level%dMelee" % level_number, spawn_position)
+	var data := null if level_number == 1 else BRUISER_ENEMY_DATA
+	_spawn_melee_enemy("Level%dMelee" % level_number, spawn_position, data)
 
 func _build_ally() -> void:
 	actor_factory.create_ally(self, player, Vector3(-2.0, 1.1, 5.5))
 
-func _spawn_melee_enemy(enemy_name: String, spawn_position: Vector3) -> void:
-	actor_factory.create_melee_enemy(self, enemy_name, player, spawn_position)
+func _spawn_melee_enemy(enemy_name: String, spawn_position: Vector3, enemy_data: Resource = null) -> void:
+	actor_factory.create_melee_enemy(self, enemy_name, player, spawn_position, enemy_data)
 
 func _build_ranged_enemy() -> void:
 	var spawn_position := Vector3(8, 1.1, -35) if level_number == 1 else Vector3(5, 1.1, -70)
-	_spawn_ranged_enemy("Level%dRanged" % level_number, spawn_position)
+	var data := null if level_number == 1 else SNIPER_ENEMY_DATA
+	_spawn_ranged_enemy("Level%dRanged" % level_number, spawn_position, data)
 
-func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3) -> void:
-	actor_factory.create_ranged_enemy(self, enemy_name, player, spawn_position)
+func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3, enemy_data: Resource = null) -> void:
+	actor_factory.create_ranged_enemy(self, enemy_name, player, spawn_position, enemy_data)
 
 func _build_hud() -> void:
 	hud = HUD_SCRIPT.new()

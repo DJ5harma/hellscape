@@ -23,23 +23,25 @@ func create_ally(parent: Node, target: CharacterBody3D, spawn_position: Vector3)
 	parent.add_child(ally)
 	return ally
 
-func create_melee_enemy(parent: Node, enemy_name: String, target: CharacterBody3D, spawn_position: Vector3) -> CharacterBody3D:
+func create_melee_enemy(parent: Node, enemy_name: String, target: CharacterBody3D, spawn_position: Vector3, enemy_data: Resource = null) -> CharacterBody3D:
 	var enemy: CharacterBody3D = MELEE_ENEMY_SCENE.instantiate()
 	enemy.name = enemy_name
 	enemy.position = spawn_position
 	enemy.target = target
+	enemy.enemy_data = enemy_data
 	enemy.add_to_group("enemies")
-	_set_visual_color(enemy, Color("#d84c5c"))
+	_set_visual_color(enemy, enemy_data.visual_color if enemy_data else Color("#d84c5c"))
 	parent.add_child(enemy)
 	return enemy
 
-func create_ranged_enemy(parent: Node, enemy_name: String, target: CharacterBody3D, spawn_position: Vector3) -> CharacterBody3D:
+func create_ranged_enemy(parent: Node, enemy_name: String, target: CharacterBody3D, spawn_position: Vector3, enemy_data: Resource = null) -> CharacterBody3D:
 	var enemy: CharacterBody3D = RANGED_ENEMY_SCENE.instantiate()
 	enemy.name = enemy_name
 	enemy.position = spawn_position
 	enemy.target = target
+	enemy.enemy_data = enemy_data
 	enemy.add_to_group("enemies")
-	_set_visual_color(enemy, Color("#a65de0"))
+	_set_visual_color(enemy, enemy_data.visual_color if enemy_data else Color("#a65de0"))
 	parent.add_child(enemy)
 	return enemy
 
