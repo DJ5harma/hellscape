@@ -17,6 +17,7 @@ var feedback_audio
 var actor_factory
 var level
 var hud
+var mobile_controls
 var using_scout := false
 
 var colors := {
@@ -51,6 +52,8 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
 		hud.update_player(player)
+		if is_instance_valid(mobile_controls):
+			mobile_controls.set_ability_state(player.is_special_ready(), player.is_dodge_ready())
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
@@ -92,6 +95,7 @@ func _build_mobile_controls() -> void:
 	controls.set_script(MOBILE_CONTROLS_SCRIPT)
 	controls.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(controls)
+	mobile_controls = controls
 	controls.movement_changed.connect(player.set_mobile_move)
 	controls.look_changed.connect(player.apply_mobile_look)
 	controls.attack_pressed.connect(player.mobile_attack)

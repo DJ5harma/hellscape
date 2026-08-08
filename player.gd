@@ -184,6 +184,9 @@ func is_special_ready() -> bool:
 func is_heavy_ready() -> bool:
 	return heavy_cooldown <= 0.0 and energy >= character_data.heavy_cost
 
+func is_dodge_ready() -> bool:
+	return dodge_cooldown <= 0.0
+
 func _physics_process(delta: float) -> void:
 	invulnerability_timer = maxf(invulnerability_timer - delta, 0.0)
 	dodge_cooldown = maxf(dodge_cooldown - delta, 0.0)

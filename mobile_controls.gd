@@ -16,6 +16,8 @@ var dodge_center := Vector2.ZERO
 var attack_label: Label
 var special_label: Label
 var dodge_label: Label
+var special_ready := true
+var dodge_ready := true
 const JOYSTICK_RADIUS := 86.0
 const ATTACK_RADIUS := 64.0
 
@@ -48,6 +50,15 @@ func _layout_labels() -> void:
 	attack_label.position = attack_center - Vector2(28.0, 10.0)
 	special_label.position = special_center - Vector2(32.0, 10.0)
 	dodge_label.position = dodge_center - Vector2(24.0, 10.0)
+
+func set_ability_state(is_special_ready: bool, is_dodge_ready: bool) -> void:
+	special_ready = is_special_ready
+	dodge_ready = is_dodge_ready
+	if is_instance_valid(special_label):
+		special_label.modulate = Color.WHITE if special_ready else Color(0.55, 0.55, 0.55)
+	if is_instance_valid(dodge_label):
+		dodge_label.modulate = Color.WHITE if dodge_ready else Color(0.55, 0.55, 0.55)
+	queue_redraw()
 
 func _input(event: InputEvent) -> void:
 	var viewport_size := get_viewport_rect().size
@@ -99,7 +110,9 @@ func _draw() -> void:
 	draw_circle(joystick_center + joystick_value * 48.0, 48.0, Color(0.35, 0.7, 1.0, 0.65))
 	draw_circle(attack_center, ATTACK_RADIUS, Color(0.85, 0.25, 0.3, 0.65))
 	draw_arc(attack_center, ATTACK_RADIUS, 0.0, TAU, 48, Color(1.0, 0.8, 0.7, 0.9), 3.0)
-	draw_circle(special_center, ATTACK_RADIUS, Color(0.55, 0.3, 0.85, 0.65))
+	var special_color := Color(0.55, 0.3, 0.85, 0.65) if special_ready else Color(0.25, 0.2, 0.3, 0.5)
+	draw_circle(special_center, ATTACK_RADIUS, special_color)
 	draw_arc(special_center, ATTACK_RADIUS, 0.0, TAU, 48, Color(0.85, 0.75, 1.0, 0.9), 3.0)
-	draw_circle(dodge_center, ATTACK_RADIUS, Color(0.85, 0.65, 0.25, 0.65))
+	var dodge_color := Color(0.85, 0.65, 0.25, 0.65) if dodge_ready else Color(0.3, 0.25, 0.15, 0.5)
+	draw_circle(dodge_center, ATTACK_RADIUS, dodge_color)
 	draw_arc(dodge_center, ATTACK_RADIUS, 0.0, TAU, 48, Color(1.0, 0.9, 0.6, 0.9), 3.0)
