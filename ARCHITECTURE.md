@@ -21,6 +21,9 @@ ui/
 systems/
 ├── actor_factory.gd    Centralized actor construction
 └── feedback_audio.gd   Runtime placeholder sound generation
+data/
+├── character_data.gd   Shared character-stat resource type
+└── default_character.tres Prototype fighter configuration
 level/
 └── graybox_level.gd    Static geometry, checkpoints, and exit trigger
 ```
@@ -39,6 +42,9 @@ level/
   than directly changing gameplay state.
 - `ui/game_hud.gd` owns HUD labels and completion presentation. Gameplay code
   sends status updates through its small public API.
+- Character balance belongs in `data/*.tres` resources. The player controller
+  reads movement, survivability, energy, and ability values from its assigned
+  resource, so new characters can reuse the controller with different data.
 - Procedural graybox construction lives in `level/graybox_level.gd`; replace
   this builder with authored `.tscn` scenes when the layout stabilizes.
 - Placeholder audio is isolated behind `FeedbackAudio`; replacing generated

@@ -1,10 +1,7 @@
 extends CharacterBody3D
 
-@export var move_speed := 7.0
-@export var acceleration := 24.0
-@export var gravity := 22.0
-@export var jump_velocity := 9.0
 @export var look_sensitivity := 0.003
+@export var character_data: Resource
 
 var camera_pivot: Node3D
 var camera: Camera3D
@@ -20,6 +17,8 @@ var energy := 100.0
 var invulnerability_timer := 0.0
 var dodge_timer := 0.0
 var dodge_cooldown := 0.0
+var attack_damage := 1
+var attack_range := 3.0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -33,6 +32,12 @@ func _ready() -> void:
 	camera.current = true
 	respawn_position = global_position
 	visual = get_node_or_null("MeshInstance3D")
+	if character_data == null:
+		character_data = load("res://data/default_character.tres")
+	health = character_data.max_health
+	energy = character_data.max_energy
+	attack_damage = character_data.basic_damage
+	attack_range = character_data.basic_range
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -72,42 +77,48 @@ func mobile_attack() -> void:
 func basic_attack() -> void:
 	attack_timer = 0.25
 	is_attacking = true
+	attack_damage = character_data.basic_damage
+	attack_range = character_data.basic_range
 	_play_action_animation(Color("#8ed8ff"), 1.2)
 
 func use_special() -> void:
-	if energy < 35.0:
+	if energy < character_data.special_cost:
 		return
-	energy -= 35.0
+	energy -= character_data.special_cost
+	attack_damage = character_data.special_damage
+	attack_range = character_data.special_range
 	_play_action_animation(Color("#cf9aff"), 1.35)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < 5.0:
-			enemy.take_damage(2)
+		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < character_data.special_range:
+			enemy.take_damage(character_data.special_damage)
 
 func use_third_attack() -> void:
-	if energy < 60.0:
+	if energy < character_data.heavy_cost:
 		return
-	energy -= 60.0
+	energy -= character_data.heavy_cost
 	attack_timer = 0.4
 	is_attacking = true
+	attack_damage = character_data.heavy_damage
+	attack_range = character_data.heavy_range
 	_play_action_animation(Color("#ffd36b"), 1.5)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < 7.0:
-			enemy.take_damage(3)
+		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < character_data.heavy_range:
+			enemy.take_damage(character_data.heavy_damage)
 
 func jump() -> void:
 	if is_on_floor() and dodge_timer <= 0.0:
-		velocity.y = jump_velocity
+		velocity.y = character_data.jump_velocity
 
 func dodge() -> void:
 	if dodge_cooldown > 0.0 or dodge_timer > 0.0:
 		return
-	dodge_timer = 0.28
-	dodge_cooldown = 1.0
-	invulnerability_timer = 0.38
+	dodge_timer = character_data.dodge_duration
+	dodge_cooldown = character_data.dodge_cooldown
+	invulnerability_timer = character_data.dodge_invulnerability
 	var dodge_direction := -transform.basis.z
 	if mobile_move.length() > 0.05:
 		dodge_direction = (transform.basis * Vector3(mobile_move.x, 0.0, mobile_move.y)).normalized()
-	velocity = dodge_direction * 13.0
+	velocity = dodge_direction * character_data.dodge_speed
 	_play_action_animation(Color("#fff0a1"), 0.8)
 
 func _play_action_animation(action_color: Color, scale_amount: float) -> void:
@@ -129,7 +140,7 @@ func mobile_dodge() -> void:
 func _physics_process(delta: float) -> void:
 	invulnerability_timer = maxf(invulnerability_timer - delta, 0.0)
 	dodge_cooldown = maxf(dodge_cooldown - delta, 0.0)
-	energy = minf(energy + 10.0 * delta, 100.0)
+	energy = minf(energy + character_data.energy_regeneration * delta, character_data.max_energy)
 	if attack_timer > 0.0:
 		attack_timer -= delta
 	else:
@@ -152,11 +163,11 @@ func _physics_process(delta: float) -> void:
 		input_direction.z += 1.0
 	input_direction = input_direction.normalized()
 	var direction := (transform.basis * input_direction).normalized()
-	var target_velocity := direction * move_speed
-	velocity.x = move_toward(velocity.x, target_velocity.x, acceleration * delta)
-	velocity.z = move_toward(velocity.z, target_velocity.z, acceleration * delta)
+	var target_velocity: Vector3 = direction * float(character_data.move_speed)
+	velocity.x = move_toward(velocity.x, target_velocity.x, character_data.acceleration * delta)
+	velocity.z = move_toward(velocity.z, target_velocity.z, character_data.acceleration * delta)
 	if not is_on_floor():
-		velocity.y -= gravity * delta
+		velocity.y -= character_data.gravity * delta
 	else:
 		velocity.y = -0.2
 	move_and_slide()
@@ -170,4 +181,4 @@ func take_damage(amount: int) -> void:
 	if health <= 0:
 		global_position = respawn_position
 		velocity = Vector3.ZERO
-		health = 100
+		health = character_data.max_health

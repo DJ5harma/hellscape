@@ -18,8 +18,8 @@ func _physics_process(delta: float) -> void:
 	hit_cooldown = maxf(hit_cooldown - delta, 0.0)
 	var offset := target.global_position - global_position
 	offset.y = 0.0
-	if target.is_attacking and offset.length() < 3.0 and hit_cooldown == 0.0:
-		take_damage(1)
+	if target.is_attacking and offset.length() < target.attack_range and hit_cooldown == 0.0:
+		take_damage(target.attack_damage)
 		hit_cooldown = 0.35
 		return
 	if offset.length() < 7.0:

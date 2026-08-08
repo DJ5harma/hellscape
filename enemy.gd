@@ -18,8 +18,8 @@ func _physics_process(delta: float) -> void:
 	attack_windup = maxf(attack_windup - delta, 0.0)
 	var offset := target.global_position - global_position
 	offset.y = 0.0
-	if target.is_attacking and offset.length() < 3.0 and attack_cooldown == 0.0:
-		take_damage(1)
+	if target.is_attacking and offset.length() < target.attack_range and attack_cooldown == 0.0:
+		take_damage(target.attack_damage)
 		attack_cooldown = 0.35
 		return
 	if offset.length() > 1.7:
