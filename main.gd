@@ -5,6 +5,8 @@ const FEEDBACK_AUDIO_SCRIPT := preload("res://systems/feedback_audio.gd")
 const ACTOR_FACTORY_SCRIPT := preload("res://systems/actor_factory.gd")
 const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
 const HUD_SCRIPT := preload("res://ui/game_hud.gd")
+const DEFAULT_CHARACTER_DATA := preload("res://data/default_character.tres")
+const SCOUT_CHARACTER_DATA := preload("res://data/scout_character.tres")
 
 var checkpoint := 0
 var encounter_complete := false
@@ -15,6 +17,7 @@ var feedback_audio
 var actor_factory
 var level
 var hud
+var using_scout := false
 
 var colors := {
 	"floor": Color("#38434a"),
@@ -48,6 +51,13 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
 		hud.update_player(player)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
+		using_scout = not using_scout
+		var selected_data = SCOUT_CHARACTER_DATA if using_scout else DEFAULT_CHARACTER_DATA
+		player.set_character_data(selected_data)
+		hud.set_status("CHARACTER: %s" % selected_data.display_name, selected_data.visual_color)
 
 func _build_player() -> void:
 	player = actor_factory.create_player(self, Vector3(0, 1.1, 5))

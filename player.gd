@@ -34,10 +34,18 @@ func _ready() -> void:
 	visual = get_node_or_null("MeshInstance3D")
 	if character_data == null:
 		character_data = load("res://data/default_character.tres")
+	set_character_data(character_data)
+
+func set_character_data(new_data: Resource) -> void:
+	character_data = new_data
 	health = character_data.max_health
 	energy = character_data.max_energy
 	attack_damage = character_data.basic_damage
 	attack_range = character_data.basic_range
+	if is_instance_valid(visual):
+		var material := StandardMaterial3D.new()
+		material.albedo_color = character_data.visual_color
+		visual.material_override = material
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:

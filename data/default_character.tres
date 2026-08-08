@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_data")
 display_name = "Prototype Fighter"
+visual_color = Color(0.333333, 0.717647, 1, 1)
 move_speed = 7.0
 acceleration = 24.0
 gravity = 22.0

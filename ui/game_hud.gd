@@ -13,7 +13,7 @@ func build() -> void:
 	checkpoint_label = _add_label(Vector2(28, 58), 20, Color("#4d8dff"))
 	checkpoint_label.text = "CHECKPOINT 0 / 4"
 	var help_label := _add_label(Vector2(28, 92), 18, Color("#f5c76b"))
-	help_label.text = "1 attack  |  2 special  |  3 heavy  |  SPACE jump  |  SHIFT dodge  |  R reset"
+	help_label.text = "1 attack  |  2 special  |  3 heavy  |  SPACE jump  |  SHIFT dodge  |  TAB switch  |  R reset"
 	health_label = _add_label(Vector2(28, 126), 18, Color("#ff7777"))
 	energy_label = _add_label(Vector2(28, 152), 18, Color("#bd8cff"))
 	completion_label = _add_label(Vector2(420, 300), 38, Color("#47d7b0"))
