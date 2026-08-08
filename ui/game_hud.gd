@@ -1,6 +1,8 @@
 extends CanvasLayer
 class_name GameHUD
 
+signal next_level_requested
+
 var status_label: Label
 var checkpoint_label: Label
 var help_label: Label
@@ -8,6 +10,7 @@ var health_label: Label
 var energy_label: Label
 var ability_label: Label
 var completion_label: Label
+var next_level_button: Button
 
 func build() -> void:
 	get_viewport().size_changed.connect(_layout)
@@ -23,6 +26,12 @@ func build() -> void:
 	completion_label = _add_label(Vector2(420, 300), 38, Color("#47d7b0"))
 	completion_label.text = "LEVEL COMPLETE\nPress R to replay"
 	completion_label.visible = false
+	next_level_button = Button.new()
+	next_level_button.text = "NEXT LEVEL"
+	next_level_button.custom_minimum_size = Vector2(220.0, 52.0)
+	next_level_button.visible = false
+	next_level_button.pressed.connect(next_level_requested.emit)
+	add_child(next_level_button)
 	_layout()
 
 func _layout() -> void:
@@ -45,6 +54,11 @@ func _layout() -> void:
 		maxf((viewport_size.x - completion_label.size.x * scale) * 0.5, margin),
 		maxf((viewport_size.y - completion_label.size.y * scale) * 0.5, 120.0)
 	)
+	next_level_button.scale = Vector2.ONE * scale
+	next_level_button.position = Vector2(
+		maxf((viewport_size.x - next_level_button.size.x * scale) * 0.5, margin),
+		completion_label.position.y + completion_label.size.y * scale + 18.0 * scale
+	)
 
 func update_player(player: Node) -> void:
 	if is_instance_valid(player):
@@ -61,8 +75,9 @@ func set_status(message: String, color := Color.WHITE) -> void:
 func set_checkpoint(number: int) -> void:
 	checkpoint_label.text = "CHECKPOINT %d / 4" % number
 
-func show_completion() -> void:
+func show_completion(show_next_level := true) -> void:
 	completion_label.visible = true
+	next_level_button.visible = show_next_level
 
 func _add_label(position: Vector2, font_size: int, color: Color) -> Label:
 	var label := Label.new()

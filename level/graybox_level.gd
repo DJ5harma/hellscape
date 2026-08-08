@@ -74,14 +74,14 @@ func _build_geometry() -> void:
 	add_box("ExitGateLeft", Vector3(-4.5, 3, -54), Vector3(1, 6, 1), colors.objective)
 	add_box("ExitGateRight", Vector3(4.5, 3, -54), Vector3(1, 6, 1), colors.objective)
 	add_box("ExitGateTop", Vector3(0, 6, -54), Vector3(10, 1, 1), colors.objective)
-	add_box("LockedGate", Vector3(0, 2.5, -50), Vector3(8, 5, 0.5), colors.hazard)
+	add_box("LockedGate", Vector3(0, 2.5, -50), Vector3(14, 5, 0.5), colors.hazard)
 	add_box("SecondFloor", Vector3(0, -0.25, -66), Vector3(18, 0.5, 22), colors.floor)
 	add_box("SecondLeftWall", Vector3(-9, 2.5, -66), Vector3(0.5, 5, 22), colors.wall)
 	add_box("SecondRightWall", Vector3(9, 2.5, -66), Vector3(0.5, 5, 22), colors.wall)
 	add_box("SecondFarWall", Vector3(0, 2.5, -77), Vector3(18, 5, 0.5), colors.wall)
 	add_box("SecondCoverA", Vector3(-5, 1, -62), Vector3(3, 2, 1.5), colors.cover)
 	add_box("SecondCoverB", Vector3(5, 1, -70), Vector3(3, 2, 1.5), colors.cover)
-	add_box("FinalGate", Vector3(0, 2.5, -73), Vector3(8, 5, 0.5), colors.hazard)
+	add_box("FinalGate", Vector3(0, 2.5, -73), Vector3(18, 5, 0.5), colors.hazard)
 
 func _build_industrial_decoration() -> void:
 	var pipe_color := Color("#87939a")
@@ -232,6 +232,16 @@ func add_box(box_name: String, position: Vector3, size: Vector3, color: Color) -
 	collision.shape = shape
 	body.add_child(collision)
 	add_child(body)
+
+func open_gate(gate_name: String) -> void:
+	var gate := get_node_or_null(gate_name) as StaticBody3D
+	if gate == null:
+		return
+	var tween := create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_IN)
+	tween.tween_property(gate, "scale:x", 0.05, 0.45)
+	tween.tween_callback(gate.queue_free)
 
 func _add_checkpoint(position: Vector3, number: int) -> void:
 	var area := Area3D.new()

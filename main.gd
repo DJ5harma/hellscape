@@ -4,6 +4,7 @@ const MOBILE_CONTROLS_SCRIPT := preload("res://mobile_controls.gd")
 const FEEDBACK_AUDIO_SCRIPT := preload("res://systems/feedback_audio.gd")
 const ACTOR_FACTORY_SCRIPT := preload("res://systems/actor_factory.gd")
 const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
+const LEVEL_TWO_SCRIPT := preload("res://level/level_2.gd")
 const HUD_SCRIPT := preload("res://ui/game_hud.gd")
 const PAUSE_MENU_SCRIPT := preload("res://ui/pause_menu.gd")
 const DEFAULT_CHARACTER_DATA := preload("res://data/default_character.tres")
@@ -24,6 +25,8 @@ var using_scout := false
 var settings := ConfigFile.new()
 const SETTINGS_PATH := "user://hellscape.cfg"
 
+@export var level_number := 1
+
 var colors := {
 	"floor": Color("#38434a"),
 	"wall": Color("#59636a"),
@@ -41,7 +44,8 @@ func _ready() -> void:
 	actor_factory = ACTOR_FACTORY_SCRIPT.new()
 	actor_factory.name = "ActorFactory"
 	add_child(actor_factory)
-	level = LEVEL_SCRIPT.new()
+	var level_script = LEVEL_TWO_SCRIPT if level_number == 2 else LEVEL_SCRIPT
+	level = level_script.new()
 	level.name = "GrayboxLevel"
 	add_child(level)
 	level.checkpoint_reached.connect(_on_checkpoint_entered)
@@ -55,7 +59,8 @@ func _ready() -> void:
 	_build_hud()
 	_build_pause_menu()
 	_build_mobile_controls()
-	hud.set_status("REACH ENCOUNTER 1  |  CLEAR BOTH HOSTILES")
+	hud.next_level_requested.connect(_load_level_two)
+	hud.set_status("LEVEL %d  |  REACH ENCOUNTER 1" % level_number)
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
@@ -105,6 +110,11 @@ func _build_hud() -> void:
 	hud.name = "GameHUD"
 	add_child(hud)
 	hud.build()
+
+func _load_level_two() -> void:
+	if level_number == 1:
+		get_tree().paused = false
+		get_tree().change_scene_to_file("res://level_2.tscn")
 
 func _build_mobile_controls() -> void:
 	var layer := CanvasLayer.new()
@@ -160,8 +170,9 @@ func _on_encounter_entered(number: int) -> void:
 
 func _on_exit_entered() -> void:
 	if encounter_complete:
-		hud.set_status("EXTRACTION REACHED  |  GRAYBOX COMPLETE", colors.objective)
-		hud.show_completion()
+		var completion_text := "EXTRACTION REACHED  |  LEVEL %d COMPLETE" % level_number
+		hud.set_status(completion_text, colors.objective)
+		hud.show_completion(level_number == 1)
 	else:
 		hud.set_status("GATE LOCKED  |  CLEAR BOTH ENCOUNTERS FIRST")
 
@@ -176,18 +187,17 @@ func enemy_defeated() -> void:
 		checkpoint = 4
 		player.respawn_position = Vector3(0, 1.1, -56)
 		hud.set_checkpoint(4)
-		hud.set_status("FIRST AREA CLEAR  |  SECOND ENCOUNTER STARTING")
-		var locked_gate: Node = level.get_node_or_null("LockedGate")
-		if locked_gate:
-			locked_gate.queue_free()
-		_spawn_melee_enemy("SecondMelee", Vector3(-4, 1.1, -66))
-		_spawn_ranged_enemy("SecondRanged", Vector3(5, 1.1, -70))
+		hud.set_status("FIRST AREA CLEAR  |  GATE OPENING")
+		level.open_gate("LockedGate")
+		_spawn_second_encounter()
 	elif encounter_stage == 2:
 		encounter_complete = true
-		hud.set_status("ALL AREAS CLEAR  |  FINAL GATE UNLOCKED", colors.objective)
-		var final_gate: Node = level.get_node_or_null("FinalGate")
-		if final_gate:
-			final_gate.queue_free()
+		hud.set_status("ALL AREAS CLEAR  |  FINAL GATE OPENING", colors.objective)
+		level.open_gate("FinalGate")
+
+func _spawn_second_encounter() -> void:
+	_spawn_melee_enemy("SecondMelee", Vector3(-4, 1.1, -66))
+	_spawn_ranged_enemy("SecondRanged", Vector3(5, 1.1, -70))
 
 func play_feedback(frequency: float, duration: float) -> void:
 	feedback_audio.play_tone(frequency, duration)
