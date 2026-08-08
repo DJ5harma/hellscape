@@ -6,6 +6,8 @@ var target: CharacterBody3D
 var attack_cooldown := 0.0
 var visual: MeshInstance3D
 var attack_component
+var gravity := 22.0
+var jump_velocity := 7.0
 
 func _ready() -> void:
 	visual = get_node_or_null("MeshInstance3D")
@@ -19,11 +21,20 @@ func _physics_process(delta: float) -> void:
 	attack_cooldown = maxf(attack_cooldown - delta, 0.0)
 	var follow_position := target.global_position + Vector3(-2.0, 0.0, 2.0)
 	var offset := follow_position - global_position
-	offset.y = 0.0
-	if offset.length() > 1.5:
-		velocity = offset.normalized() * 4.0
+	var horizontal_offset := Vector3(offset.x, 0.0, offset.z)
+	if horizontal_offset.length() > 1.5:
+		var horizontal_velocity := horizontal_offset.normalized() * 4.0
+		velocity.x = horizontal_velocity.x
+		velocity.z = horizontal_velocity.z
 	else:
-		velocity = Vector3.ZERO
+		velocity.x = 0.0
+		velocity.z = 0.0
+	if target.global_position.y > global_position.y + 0.35 and is_on_floor():
+		velocity.y = jump_velocity
+	elif not is_on_floor():
+		velocity.y -= gravity * delta
+	else:
+		velocity.y = -0.2
 	var nearest_enemy: Node3D
 	var nearest_distance := 2.0
 	for enemy in get_tree().get_nodes_in_group("enemies"):

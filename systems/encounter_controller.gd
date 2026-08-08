@@ -57,6 +57,8 @@ func _spawn_current_wave() -> void:
 	wave_started.emit(wave_index + 1, waves.size())
 	for spawn in wave.enemy_spawns:
 		var enemy_data: Resource = spawn.enemy_data
+		if spawn.spawn_mode != "direct" and encounter_parent.level.has_method("show_spawn_portal"):
+			encounter_parent.level.show_spawn_portal(spawn.spawn_position)
 		if spawn.archetype == "boss":
 			actor_factory.create_boss(encounter_parent, spawn.enemy_name, target, spawn.spawn_position, enemy_data)
 		elif spawn.archetype == "ranged" or spawn.archetype == "sniper":

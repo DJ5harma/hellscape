@@ -21,6 +21,8 @@ signal encounter_entered(number: int)
 
 var colors := {
 	"ground": Color("#9b7652"),
+	"ground_alt": Color("#a7835d"),
+	"ground_light": Color("#b28b64"),
 	"mountain": Color("#63534b"),
 	"grass": Color("#6f8b4e"),
 	"rock": Color("#74675f"),
@@ -58,9 +60,10 @@ func _build_lighting() -> void:
 	sun.light_energy = 1.4
 	sun.shadow_enabled = true
 	add_child(sun)
+	_add_wind_particles()
 
 func _build_geometry() -> void:
-	for segment in [
+	var ground_segments := [
 		[Vector3(0, -0.25, 0), Vector3(30, 0.5, 24)],
 		[Vector3(0, -0.25, -20), Vector3(26, 0.5, 20)],
 		[Vector3(0, -0.25, -36), Vector3(38, 0.5, 24)],
@@ -68,8 +71,12 @@ func _build_geometry() -> void:
 		[Vector3(0, -0.25, -68), Vector3(42, 0.5, 32)],
 		[Vector3(0, -0.25, -96), Vector3(32, 0.5, 24)],
 		[Vector3(0, -0.25, -122), Vector3(46, 0.5, 34)]
-	]:
-		add_box("OutdoorGround", segment[0], segment[1], colors.ground)
+	]
+	var ground_palette := [colors.ground, colors.ground_alt, colors.ground_light]
+	for index in ground_segments.size():
+		var segment = ground_segments[index]
+		add_box("OutdoorGround", segment[0], segment[1], ground_palette[index % ground_palette.size()])
+	add_box("RouteSafetyFloor", Vector3(0, -1.0, -68), Vector3(50, 1.0, 150), colors.ground)
 	_add_mountain_wall(Vector3(-18, 4, -10), Vector3(5, 8, 80))
 	_add_mountain_wall(Vector3(18, 4, -10), Vector3(5, 8, 80))
 	_add_mountain_wall(Vector3(-24, 5, -82), Vector3(6, 10, 70))
@@ -100,21 +107,89 @@ func _build_industrial_decoration() -> void:
 
 func _build_nature_kit_decoration() -> void:
 	for z in [-8.0, -20.0, -32.0, -44.0, -60.0, -76.0, -94.0, -112.0, -130.0]:
-		_add_asset(NATURE_CLIFF_SCENE, Vector3(-15.5, 0.0, z), Vector3(0, PI * 0.5, 0), Vector3(2.2, 2.2, 2.2))
-		_add_asset(NATURE_CLIFF_SCENE, Vector3(15.5, 0.0, z), Vector3(0, -PI * 0.5, 0), Vector3(2.2, 2.2, 2.2))
+		_add_asset(NATURE_CLIFF_SCENE, Vector3(-15.5, 0.0, z), Vector3(0, PI * 0.5, 0), Vector3(2.2, 2.2, 2.2), Vector3.ZERO, colors.mountain)
+		_add_asset(NATURE_CLIFF_SCENE, Vector3(15.5, 0.0, z), Vector3(0, -PI * 0.5, 0), Vector3(2.2, 2.2, 2.2), Vector3.ZERO, colors.mountain)
 	for z in [-6.0, -18.0, -30.0, -42.0, -58.0, -74.0, -92.0, -110.0, -128.0]:
-		_add_asset(NATURE_GRASS_GROUND_SCENE, Vector3(0.0, 0.02, z), Vector3.ZERO, Vector3(3.2, 1.0, 3.2))
+		_add_asset(NATURE_GRASS_GROUND_SCENE, Vector3(0.0, 0.02, z), Vector3.ZERO, Vector3(3.2, 1.0, 3.2), Vector3.ZERO, colors.ground_alt)
 	for position in [
 		Vector3(-10.5, 0.0, -16.0), Vector3(10.5, 0.0, -28.0),
 		Vector3(-11.0, 0.0, -49.0), Vector3(12.0, 0.0, -67.0),
 		Vector3(-10.0, 0.0, -88.0), Vector3(11.0, 0.0, -104.0),
 		Vector3(-13.0, 0.0, -122.0), Vector3(13.0, 0.0, -134.0)
 	]:
-		_add_asset(NATURE_ROCK_SCENE, position, Vector3(0, randf_range(-PI, PI), 0), Vector3.ONE * randf_range(0.8, 1.35))
-	for position in [Vector3(-7.0, 0.0, -12.0), Vector3(8.0, 0.0, -38.0), Vector3(-8.0, 0.0, -82.0), Vector3(9.0, 0.0, -118.0)]:
-		_add_asset(NATURE_GRASS_SCENE, position, Vector3(0, randf_range(-PI, PI), 0), Vector3.ONE * 1.3)
-	_add_asset(NATURE_STONE_STAIRS_SCENE, Vector3(10.0, 0.0, -72.0), Vector3.ZERO, Vector3(1.8, 1.8, 1.8))
-	_add_asset(NATURE_STONE_BRIDGE_SCENE, Vector3(-5.0, 0.0, -100.0), Vector3(0, PI * 0.5, 0), Vector3(1.8, 1.8, 1.8))
+		_add_asset(NATURE_ROCK_SCENE, position, Vector3(0, randf_range(-PI, PI), 0), Vector3.ONE * randf_range(0.8, 1.35), Vector3.ZERO, colors.rock)
+	for position in [
+		Vector3(-7.0, 0.0, -12.0), Vector3(8.0, 0.0, -38.0),
+		Vector3(-8.0, 0.0, -54.0), Vector3(9.0, 0.0, -74.0),
+		Vector3(-10.0, 0.0, -82.0), Vector3(8.0, 0.0, -94.0),
+		Vector3(-9.0, 0.0, -108.0), Vector3(9.0, 0.0, -118.0),
+		Vector3(-7.0, 0.0, -130.0)
+	]:
+		_add_asset(NATURE_GRASS_SCENE, position, Vector3(0, randf_range(-PI, PI), 0), Vector3.ONE * randf_range(0.8, 1.4), Vector3.ZERO, colors.grass)
+	_add_asset(NATURE_STONE_STAIRS_SCENE, Vector3(10.0, 0.0, -72.0), Vector3.ZERO, Vector3(1.8, 1.8, 1.8), Vector3.ZERO, colors.rock)
+	_add_asset(NATURE_STONE_BRIDGE_SCENE, Vector3(-5.0, 0.0, -100.0), Vector3(0, PI * 0.5, 0), Vector3(1.8, 1.8, 1.8), Vector3.ZERO, colors.rock)
+	_add_asset(
+		NATURE_STONE_BRIDGE_SCENE,
+		Vector3(5.0, 1.5, -70.0),
+		Vector3(0, PI * 0.5, 0),
+		Vector3(2.4, 2.4, 2.4),
+		Vector3(5.0, 1.0, 4.0),
+		colors.rock
+	)
+	_add_asset(NATURE_CLIFF_CORNER_SCENE, Vector3(-15.0, 0.0, -48.0), Vector3.ZERO, Vector3(2.0, 2.0, 2.0), Vector3.ZERO, colors.mountain)
+	_add_asset(NATURE_CLIFF_CORNER_SCENE, Vector3(15.0, 0.0, -48.0), Vector3(0, PI, 0), Vector3(2.0, 2.0, 2.0), Vector3.ZERO, colors.mountain)
+
+func _add_wind_particles() -> void:
+	for index in 8:
+		var wind := GPUParticles3D.new()
+		wind.name = "MountainWind_%d" % index
+		wind.amount = 8 + index % 3 * 4
+		wind.lifetime = 2.4 + index % 3 * 0.6
+		wind.position = Vector3(
+			-12.0 + (index % 4) * 8.0,
+			1.5 + (index % 3) * 1.2,
+			-8.0 - index * 18.0
+		)
+		wind.visibility_aabb = AABB(Vector3(-8, -2, -10), Vector3(16, 8, 20))
+		var process_material := ParticleProcessMaterial.new()
+		process_material.direction = Vector3(1.0, 0.05, 0.0)
+		process_material.spread = 12.0 + index * 2.0
+		process_material.initial_velocity_min = 1.0 + index * 0.08
+		process_material.initial_velocity_max = 2.5 + index * 0.12
+		process_material.gravity = Vector3(0.0, -0.1, 0.0)
+		wind.process_material = process_material
+		var wind_mesh := QuadMesh.new()
+		wind_mesh.size = Vector2(0.04 + index % 2 * 0.03, 0.8 + index % 3 * 0.25)
+		var wind_material := StandardMaterial3D.new()
+		wind_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		wind_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		wind_material.albedo_color = Color(1.0, 0.82 + index * 0.01, 0.62, 0.1 + index % 3 * 0.03)
+		wind_material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		wind_mesh.material = wind_material
+		wind.draw_pass_1 = wind_mesh
+		add_child(wind)
+
+func show_spawn_portal(position: Vector3) -> void:
+	var portal := MeshInstance3D.new()
+	portal.name = "SpawnPortal"
+	portal.position = position + Vector3.UP * 0.04
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.9
+	mesh.bottom_radius = 0.9
+	mesh.height = 0.06
+	portal.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color("#a467ff")
+	material.emission_enabled = true
+	material.emission = Color("#8f42ff")
+	material.emission_energy_multiplier = 5.0
+	mesh.material = material
+	add_child(portal)
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(portal, "scale", Vector3(1.8, 1.0, 1.8), 0.35)
+	tween.tween_property(material, "emission_energy_multiplier", 0.0, 0.6)
+	tween.chain().tween_callback(portal.queue_free)
 
 func _add_mountain_wall(position: Vector3, size: Vector3) -> void:
 	add_box("MountainWall", position, size, colors.mountain)
@@ -244,12 +319,21 @@ func _add_encounter_marker(position: Vector3, color: Color) -> void:
 	mesh.material = material
 	add_child(marker)
 
-func _add_asset(scene: PackedScene, position: Vector3, rotation: Vector3, scale: Vector3, collision_size := Vector3.ZERO) -> void:
+func _add_asset(
+	scene: PackedScene,
+	position: Vector3,
+	rotation: Vector3,
+	scale: Vector3,
+	collision_size := Vector3.ZERO,
+	tint := Color.TRANSPARENT
+) -> void:
 	var instance := scene.instantiate()
 	instance.position = position
 	instance.rotation = rotation
 	instance.scale = scale
 	add_child(instance)
+	if tint.a > 0.0:
+		_tint_asset(instance, tint)
 	if collision_size != Vector3.ZERO:
 		var body := StaticBody3D.new()
 		body.name = "%sCollision" % instance.name
@@ -260,6 +344,13 @@ func _add_asset(scene: PackedScene, position: Vector3, rotation: Vector3, scale:
 		collision.shape = shape
 		body.add_child(collision)
 		add_child(body)
+
+func _tint_asset(root: Node, color: Color) -> void:
+	for mesh_instance in root.find_children("*", "MeshInstance3D", true, false):
+		var material := StandardMaterial3D.new()
+		material.albedo_color = color
+		material.roughness = 0.9
+		mesh_instance.material_override = material
 
 func add_box(box_name: String, position: Vector3, size: Vector3, color: Color) -> void:
 	var body := StaticBody3D.new()

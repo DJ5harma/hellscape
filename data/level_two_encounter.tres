@@ -11,12 +11,14 @@
 script = ExtResource("2_spawn")
 enemy_name = "Level2Melee"
 archetype = "melee"
+spawn_mode = "portal"
 spawn_position = Vector3(0, 1.1, -64)
 
 [sub_resource type="Resource" id="Spawn_bruiser"]
 script = ExtResource("2_spawn")
 enemy_name = "Level2Bruiser"
 archetype = "bruiser"
+spawn_mode = "ambush"
 spawn_position = Vector3(-4, 1.1, -66)
 enemy_data = ExtResource("3_bruiser")
 
