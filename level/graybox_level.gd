@@ -7,6 +7,13 @@ const MACHINE_SCENE := preload("res://assets/environment/kenney/kenney_factory-k
 const CATWALK_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/catwalk-straight.glb")
 const BOX_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/box-large.glb")
 const INDICATOR_SCENE := preload("res://assets/environment/kenney/kenney_factory-kit_3.0/Models/GLB format/indicator-special-area.glb")
+const NATURE_CLIFF_SCENE := preload("res://assets/environment/kenney/kenney_nature-kit/Models/GLB format/cliff_large_rock.glb")
+const NATURE_CLIFF_CORNER_SCENE := preload("res://assets/environment/kenney/kenney_nature-kit/Models/GLB format/cliff_corner_rock.glb")
+const NATURE_GRASS_GROUND_SCENE := preload("res://assets/environment/kenney/kenney_nature-kit/Models/GLB format/ground_grass.glb")
+const NATURE_GRASS_SCENE := preload("res://assets/environment/kenney/kenney_nature-kit/Models/GLB format/grass_large.glb")
+const NATURE_ROCK_SCENE := preload("res://assets/environment/kenney/kenney_nature-kit/Models/GLB format/rock_largeA.glb")
+const NATURE_STONE_BRIDGE_SCENE := preload("res://assets/environment/kenney/kenney_nature-kit/Models/GLB format/bridge_stone.glb")
+const NATURE_STONE_STAIRS_SCENE := preload("res://assets/environment/kenney/kenney_nature-kit/Models/GLB format/cliff_steps_stone.glb")
 
 signal checkpoint_reached(number: int)
 signal exit_reached
@@ -81,6 +88,7 @@ func _build_geometry() -> void:
 	add_child(navigation_region)
 
 func _build_industrial_decoration() -> void:
+	_build_nature_kit_decoration()
 	for position in [Vector3(-8, 0.4, -8), Vector3(7, 0.4, -18), Vector3(-9, 0.4, -31), Vector3(10, 0.4, -39), Vector3(-14, 0.4, -66), Vector3(14, 0.4, -74), Vector3(-16, 0.4, -116), Vector3(15, 0.4, -128)]:
 		_add_boulder(position)
 	for position in [Vector3(-6, 0.0, -5), Vector3(8, 0.0, -23), Vector3(-12, 0.0, -35), Vector3(12, 0.0, -45), Vector3(-15, 0.0, -63), Vector3(15, 0.0, -82), Vector3(-17, 0.0, -110), Vector3(17, 0.0, -132)]:
@@ -89,6 +97,24 @@ func _build_industrial_decoration() -> void:
 		_add_beacon(position, colors.objective)
 	for position in [Vector3(0, 0.03, -25), Vector3(0, 0.03, -62), Vector3(0, 0.03, -102), Vector3(0, 0.03, -132)]:
 		_add_encounter_marker(position, colors.hazard)
+
+func _build_nature_kit_decoration() -> void:
+	for z in [-8.0, -20.0, -32.0, -44.0, -60.0, -76.0, -94.0, -112.0, -130.0]:
+		_add_asset(NATURE_CLIFF_SCENE, Vector3(-15.5, 0.0, z), Vector3(0, PI * 0.5, 0), Vector3(2.2, 2.2, 2.2))
+		_add_asset(NATURE_CLIFF_SCENE, Vector3(15.5, 0.0, z), Vector3(0, -PI * 0.5, 0), Vector3(2.2, 2.2, 2.2))
+	for z in [-6.0, -18.0, -30.0, -42.0, -58.0, -74.0, -92.0, -110.0, -128.0]:
+		_add_asset(NATURE_GRASS_GROUND_SCENE, Vector3(0.0, 0.02, z), Vector3.ZERO, Vector3(3.2, 1.0, 3.2))
+	for position in [
+		Vector3(-10.5, 0.0, -16.0), Vector3(10.5, 0.0, -28.0),
+		Vector3(-11.0, 0.0, -49.0), Vector3(12.0, 0.0, -67.0),
+		Vector3(-10.0, 0.0, -88.0), Vector3(11.0, 0.0, -104.0),
+		Vector3(-13.0, 0.0, -122.0), Vector3(13.0, 0.0, -134.0)
+	]:
+		_add_asset(NATURE_ROCK_SCENE, position, Vector3(0, randf_range(-PI, PI), 0), Vector3.ONE * randf_range(0.8, 1.35))
+	for position in [Vector3(-7.0, 0.0, -12.0), Vector3(8.0, 0.0, -38.0), Vector3(-8.0, 0.0, -82.0), Vector3(9.0, 0.0, -118.0)]:
+		_add_asset(NATURE_GRASS_SCENE, position, Vector3(0, randf_range(-PI, PI), 0), Vector3.ONE * 1.3)
+	_add_asset(NATURE_STONE_STAIRS_SCENE, Vector3(10.0, 0.0, -72.0), Vector3.ZERO, Vector3(1.8, 1.8, 1.8))
+	_add_asset(NATURE_STONE_BRIDGE_SCENE, Vector3(-5.0, 0.0, -100.0), Vector3(0, PI * 0.5, 0), Vector3(1.8, 1.8, 1.8))
 
 func _add_mountain_wall(position: Vector3, size: Vector3) -> void:
 	add_box("MountainWall", position, size, colors.mountain)
