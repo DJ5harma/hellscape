@@ -1,11 +1,8 @@
 extends Node3D
 
-const PLAYER_SCRIPT := preload("res://player.gd")
-const ENEMY_SCRIPT := preload("res://enemy.gd")
-const RANGED_ENEMY_SCRIPT := preload("res://ranged_enemy.gd")
-const ALLY_SCRIPT := preload("res://ally.gd")
 const MOBILE_CONTROLS_SCRIPT := preload("res://mobile_controls.gd")
 const FEEDBACK_AUDIO_SCRIPT := preload("res://systems/feedback_audio.gd")
+const ACTOR_FACTORY_SCRIPT := preload("res://systems/actor_factory.gd")
 const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
 
 var status_label: Label
@@ -19,6 +16,7 @@ var player: CharacterBody3D
 var encounter_stage := 1
 var remaining_enemies := 2
 var feedback_audio
+var actor_factory
 var level
 
 var colors := {
@@ -34,6 +32,9 @@ func _ready() -> void:
 	feedback_audio = FEEDBACK_AUDIO_SCRIPT.new()
 	feedback_audio.name = "FeedbackAudio"
 	add_child(feedback_audio)
+	actor_factory = ACTOR_FACTORY_SCRIPT.new()
+	actor_factory.name = "ActorFactory"
+	add_child(actor_factory)
 	level = LEVEL_SCRIPT.new()
 	level.name = "GrayboxLevel"
 	add_child(level)
@@ -53,103 +54,22 @@ func _process(_delta: float) -> void:
 		energy_label.text = "ENERGY %d / 100" % roundi(player.energy)
 
 func _build_player() -> void:
-	player = CharacterBody3D.new()
-	player.name = "Player"
-	player.position = Vector3(0, 1.1, 5)
-	player.set_script(PLAYER_SCRIPT)
-	var mesh_instance := MeshInstance3D.new()
-	var capsule_mesh := CapsuleMesh.new()
-	capsule_mesh.height = 1.8
-	capsule_mesh.radius = 0.4
-	mesh_instance.mesh = capsule_mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color("#55b7ff")
-	capsule_mesh.material = material
-	player.add_child(mesh_instance)
-	var collision := CollisionShape3D.new()
-	var capsule_shape := CapsuleShape3D.new()
-	capsule_shape.height = 1.8
-	capsule_shape.radius = 0.4
-	collision.shape = capsule_shape
-	player.add_child(collision)
-	add_child(player)
+	player = actor_factory.create_player(self, Vector3(0, 1.1, 5))
 
 func _build_enemy() -> void:
 	_spawn_melee_enemy("TrainingEnemy", Vector3(0, 1.1, -31))
 
 func _build_ally() -> void:
-	var ally := CharacterBody3D.new()
-	ally.name = "Companion"
-	ally.position = Vector3(-2.0, 1.1, 5.5)
-	ally.set_script(ALLY_SCRIPT)
-	ally.target = player
-	var mesh_instance := MeshInstance3D.new()
-	var capsule_mesh := CapsuleMesh.new()
-	capsule_mesh.height = 1.6
-	capsule_mesh.radius = 0.35
-	mesh_instance.mesh = capsule_mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color("#4de0aa")
-	capsule_mesh.material = material
-	ally.add_child(mesh_instance)
-	var collision := CollisionShape3D.new()
-	var capsule_shape := CapsuleShape3D.new()
-	capsule_shape.height = 1.6
-	capsule_shape.radius = 0.35
-	collision.shape = capsule_shape
-	ally.add_child(collision)
-	add_child(ally)
+	actor_factory.create_ally(self, player, Vector3(-2.0, 1.1, 5.5))
 
 func _spawn_melee_enemy(enemy_name: String, spawn_position: Vector3) -> void:
-	var enemy := CharacterBody3D.new()
-	enemy.name = enemy_name
-	enemy.position = spawn_position
-	enemy.set_script(ENEMY_SCRIPT)
-	enemy.target = player
-	enemy.add_to_group("enemies")
-	var mesh_instance := MeshInstance3D.new()
-	var capsule_mesh := CapsuleMesh.new()
-	capsule_mesh.height = 1.8
-	capsule_mesh.radius = 0.45
-	mesh_instance.mesh = capsule_mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color("#d84c5c")
-	capsule_mesh.material = material
-	enemy.add_child(mesh_instance)
-	var collision := CollisionShape3D.new()
-	var capsule_shape := CapsuleShape3D.new()
-	capsule_shape.height = 1.8
-	capsule_shape.radius = 0.45
-	collision.shape = capsule_shape
-	enemy.add_child(collision)
-	add_child(enemy)
+	actor_factory.create_melee_enemy(self, enemy_name, player, spawn_position)
 
 func _build_ranged_enemy() -> void:
 	_spawn_ranged_enemy("RangedEnemy", Vector3(8, 1.1, -35))
 
 func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3) -> void:
-	var enemy := CharacterBody3D.new()
-	enemy.name = enemy_name
-	enemy.position = spawn_position
-	enemy.set_script(RANGED_ENEMY_SCRIPT)
-	enemy.target = player
-	enemy.add_to_group("enemies")
-	var mesh_instance := MeshInstance3D.new()
-	var capsule_mesh := CapsuleMesh.new()
-	capsule_mesh.height = 1.8
-	capsule_mesh.radius = 0.4
-	mesh_instance.mesh = capsule_mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color("#a65de0")
-	capsule_mesh.material = material
-	enemy.add_child(mesh_instance)
-	var collision := CollisionShape3D.new()
-	var capsule_shape := CapsuleShape3D.new()
-	capsule_shape.height = 1.8
-	capsule_shape.radius = 0.4
-	collision.shape = capsule_shape
-	enemy.add_child(collision)
-	add_child(enemy)
+	actor_factory.create_ranged_enemy(self, enemy_name, player, spawn_position)
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
