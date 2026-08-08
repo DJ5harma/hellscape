@@ -21,6 +21,8 @@ var hud
 var mobile_controls
 var pause_menu
 var using_scout := false
+var settings := ConfigFile.new()
+const SETTINGS_PATH := "user://hellscape.cfg"
 
 var colors := {
 	"floor": Color("#38434a"),
@@ -75,6 +77,8 @@ func _build_pause_menu() -> void:
 	add_child(pause_menu)
 	pause_menu.restart_requested.connect(_restart_level)
 	pause_menu.sensitivity_changed.connect(_set_camera_sensitivity)
+	pause_menu.volume_changed.connect(_set_master_volume)
+	_load_settings()
 
 func _build_player() -> void:
 	player = actor_factory.create_player(self, Vector3(0, 1.1, 5))
@@ -119,6 +123,22 @@ func _build_mobile_controls() -> void:
 
 func _set_camera_sensitivity(value: float) -> void:
 	player.look_sensitivity = value
+	settings.set_value("controls", "sensitivity", value)
+	settings.save(SETTINGS_PATH)
+
+func _set_master_volume(value: float) -> void:
+	var decibels := -80.0 if value <= 0.0 else linear_to_db(value)
+	AudioServer.set_bus_volume_db(0, decibels)
+	settings.set_value("audio", "master_volume", value)
+	settings.save(SETTINGS_PATH)
+
+func _load_settings() -> void:
+	settings.load(SETTINGS_PATH)
+	var sensitivity: float = settings.get_value("controls", "sensitivity", 0.003)
+	var volume: float = settings.get_value("audio", "master_volume", 1.0)
+	player.look_sensitivity = sensitivity
+	_set_master_volume(volume)
+	pause_menu.set_settings(sensitivity, volume)
 
 func _restart_level() -> void:
 	get_tree().paused = false

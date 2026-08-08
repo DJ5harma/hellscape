@@ -3,9 +3,12 @@ class_name PauseMenu
 
 signal restart_requested
 signal sensitivity_changed(value: float)
+signal volume_changed(value: float)
 
 var overlay: ColorRect
 var panel: PanelContainer
+var sensitivity_slider: HSlider
+var volume_slider: HSlider
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -41,13 +44,24 @@ func _build() -> void:
 	var sensitivity_label := Label.new()
 	sensitivity_label.text = "Camera sensitivity"
 	content.add_child(sensitivity_label)
-	var sensitivity := HSlider.new()
-	sensitivity.min_value = 0.001
-	sensitivity.max_value = 0.008
-	sensitivity.step = 0.0005
-	sensitivity.value = 0.003
-	sensitivity.value_changed.connect(sensitivity_changed.emit)
-	content.add_child(sensitivity)
+	sensitivity_slider = HSlider.new()
+	sensitivity_slider.min_value = 0.001
+	sensitivity_slider.max_value = 0.008
+	sensitivity_slider.step = 0.0005
+	sensitivity_slider.value = 0.003
+	sensitivity_slider.value_changed.connect(sensitivity_changed.emit)
+	content.add_child(sensitivity_slider)
+
+	var volume_label := Label.new()
+	volume_label.text = "Master volume"
+	content.add_child(volume_label)
+	volume_slider = HSlider.new()
+	volume_slider.min_value = 0.0
+	volume_slider.max_value = 1.0
+	volume_slider.step = 0.05
+	volume_slider.value = 1.0
+	volume_slider.value_changed.connect(volume_changed.emit)
+	content.add_child(volume_slider)
 
 	var restart_button := Button.new()
 	restart_button.text = "RESTART LEVEL"
@@ -65,3 +79,7 @@ func set_open(open: bool) -> void:
 
 func toggle() -> void:
 	set_open(not visible)
+
+func set_settings(sensitivity: float, volume: float) -> void:
+	sensitivity_slider.value = sensitivity
+	volume_slider.value = volume

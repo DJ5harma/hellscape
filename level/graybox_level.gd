@@ -15,6 +15,7 @@ var colors := {
 func build() -> void:
 	_build_lighting()
 	_build_geometry()
+	_build_industrial_decoration()
 	_add_checkpoint(Vector3(0, 0.2, -8), 1)
 	_add_checkpoint(Vector3(0, 0.2, -25), 2)
 	_add_checkpoint(Vector3(0, 0.2, -45), 3)
@@ -71,6 +72,78 @@ func _build_geometry() -> void:
 	add_box("SecondCoverA", Vector3(-5, 1, -62), Vector3(3, 2, 1.5), colors.cover)
 	add_box("SecondCoverB", Vector3(5, 1, -70), Vector3(3, 2, 1.5), colors.cover)
 	add_box("FinalGate", Vector3(0, 2.5, -73), Vector3(8, 5, 0.5), colors.hazard)
+
+func _build_industrial_decoration() -> void:
+	var pipe_color := Color("#87939a")
+	var dark_metal := Color("#202a30")
+	var warning_color := Color("#e6a62e")
+	for position in [Vector3(-7.8, 3.7, -8), Vector3(7.8, 3.7, -13), Vector3(-3.8, 3.7, -22), Vector3(3.8, 3.7, -27), Vector3(-7.8, 3.7, -62), Vector3(7.8, 3.7, -69)]:
+		_add_pipe(position, pipe_color)
+	for position in [Vector3(-7.5, 2.0, -5), Vector3(7.5, 2.0, -20), Vector3(-11.5, 2.0, -31), Vector3(11.5, 2.0, -34), Vector3(-7.5, 2.0, -64), Vector3(7.5, 2.0, -72)]:
+		_add_lamp(position, warning_color)
+	for position in [Vector3(-6.5, 0.8, -30), Vector3(6.5, 0.8, -30), Vector3(-3.5, 0.8, -64), Vector3(3.5, 0.8, -70)]:
+		_add_prop_box("Crate", position, Vector3(1.6, 1.6, 1.6), dark_metal)
+	for position in [Vector3(0, 0.05, -8), Vector3(0, 0.05, -25), Vector3(0, 0.05, -45)]:
+		_add_beacon(position, Color("#4d8dff"))
+
+func _add_pipe(position: Vector3, color: Color) -> void:
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.16
+	mesh.bottom_radius = 0.16
+	mesh.height = 8.0
+	mesh_instance.mesh = mesh
+	mesh_instance.position = position
+	mesh_instance.rotation_degrees.z = 90.0
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.metallic = 0.7
+	material.roughness = 0.35
+	mesh.material = material
+	add_child(mesh_instance)
+
+func _add_lamp(position: Vector3, color: Color) -> void:
+	var lamp := OmniLight3D.new()
+	lamp.position = position
+	lamp.light_color = color
+	lamp.light_energy = 1.4
+	lamp.omni_range = 7.0
+	add_child(lamp)
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.2
+	mesh.height = 0.4
+	mesh_instance.mesh = mesh
+	mesh_instance.position = position
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.emission_enabled = true
+	material.emission = color
+	material.emission_energy_multiplier = 3.0
+	mesh.material = material
+	add_child(mesh_instance)
+
+func _add_prop_box(prop_name: String, position: Vector3, size: Vector3, color: Color) -> void:
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = prop_name
+	mesh_instance.position = position
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	mesh_instance.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.metallic = 0.4
+	material.roughness = 0.7
+	mesh.material = material
+	add_child(mesh_instance)
+
+func _add_beacon(position: Vector3, color: Color) -> void:
+	var beacon := OmniLight3D.new()
+	beacon.position = position + Vector3.UP * 0.4
+	beacon.light_color = color
+	beacon.light_energy = 0.8
+	beacon.omni_range = 3.0
+	add_child(beacon)
 
 func add_box(box_name: String, position: Vector3, size: Vector3, color: Color) -> void:
 	var body := StaticBody3D.new()
