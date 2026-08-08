@@ -64,7 +64,6 @@ func _ready() -> void:
 	level.build()
 	_build_player()
 	player.combat_feedback.connect(_on_combat_feedback)
-	_build_ally()
 	_build_hud()
 	_build_pause_menu()
 	_build_mobile_controls()
@@ -108,9 +107,6 @@ func _build_pause_menu() -> void:
 func _build_player() -> void:
 	var spawn_position := Vector3(0, 1.1, 5) if level_number == 1 else Vector3(0, 1.1, -56)
 	player = actor_factory.create_player(self, spawn_position)
-
-func _build_ally() -> void:
-	actor_factory.create_ally(self, player, Vector3(-2.0, 1.1, 5.5))
 
 func _build_hud() -> void:
 	hud = HUD_SCRIPT.new()

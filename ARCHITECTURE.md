@@ -8,10 +8,8 @@ main.gd                 Scene coordinator, spawning, and progression state
 player.gd               Player movement, camera, combat input, health
 enemy.gd                Melee enemy behavior
 ranged_enemy.gd         Ranged enemy behavior and projectiles
-ally.gd                 Companion follow and support behavior
 projectile.gd           Projectile movement and hit detection
 player.tscn              Reusable player scene
-ally.tscn                Reusable companion scene
 melee_enemy.tscn         Reusable melee enemy scene
 ranged_enemy.tscn        Reusable ranged enemy scene
 projectile.tscn          Reusable projectile scene
