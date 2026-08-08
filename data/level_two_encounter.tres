@@ -1,0 +1,26 @@
+[gd_resource type="Resource" script_class="EncounterData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://data/encounter_data.gd" id="1_encounter"]
+[ext_resource type="Script" path="res://data/enemy_spawn_data.gd" id="2_spawn"]
+[ext_resource type="Resource" path="res://data/bruiser_enemy.tres" id="3_bruiser"]
+[ext_resource type="Resource" path="res://data/sniper_enemy.tres" id="4_sniper"]
+
+[sub_resource type="Resource" id="Spawn_bruiser"]
+script = ExtResource("2_spawn")
+enemy_name = "Level2Bruiser"
+archetype = "bruiser"
+spawn_position = Vector3(-4, 1.1, -66)
+enemy_data = ExtResource("3_bruiser")
+
+[sub_resource type="Resource" id="Spawn_sniper"]
+script = ExtResource("2_spawn")
+enemy_name = "Level2Sniper"
+archetype = "sniper"
+spawn_position = Vector3(5, 1.1, -70)
+enemy_data = ExtResource("4_sniper")
+
+[resource]
+script = ExtResource("1_encounter")
+display_name = "LEVEL 2 ENCOUNTER"
+objective = "DEFEAT THE BRUISER AND SNIPER"
+enemy_spawns = Array[Resource]([SubResource("Spawn_bruiser"), SubResource("Spawn_sniper")])

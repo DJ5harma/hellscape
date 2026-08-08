@@ -9,6 +9,17 @@ var objective := ""
 var remaining_enemies := 0
 var active := false
 
+func start(data: Resource, actor_factory: Node, parent: Node, target: CharacterBody3D) -> void:
+	remaining_enemies = 0
+	for spawn in data.enemy_spawns:
+		var enemy_data: Resource = spawn.enemy_data
+		if spawn.archetype == "ranged" or spawn.archetype == "sniper":
+			actor_factory.create_ranged_enemy(parent, spawn.enemy_name, target, spawn.spawn_position, enemy_data)
+		else:
+			actor_factory.create_melee_enemy(parent, spawn.enemy_name, target, spawn.spawn_position, enemy_data)
+		register_enemy()
+	begin(data.display_name, data.objective)
+
 func begin(name: String, objective_text: String) -> void:
 	encounter_name = name
 	objective = objective_text

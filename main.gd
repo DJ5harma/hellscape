@@ -11,14 +11,13 @@ const PAUSE_MENU_SCRIPT := preload("res://ui/pause_menu.gd")
 const JUGGERNAUT_CHARACTER_DATA := preload("res://data/juggernaut_character.tres")
 const SCOUT_CHARACTER_DATA := preload("res://data/scout_character.tres")
 const MARKSMAN_CHARACTER_DATA := preload("res://data/marksman_character.tres")
-const BRUISER_ENEMY_DATA := preload("res://data/bruiser_enemy.tres")
-const SNIPER_ENEMY_DATA := preload("res://data/sniper_enemy.tres")
+const LEVEL_ONE_ENCOUNTER := preload("res://data/level_one_encounter.tres")
+const LEVEL_TWO_ENCOUNTER := preload("res://data/level_two_encounter.tres")
 
 var checkpoint := 0
 var encounter_complete := false
 var completion_shown := false
 var player: CharacterBody3D
-var remaining_enemies := 2
 var feedback_audio
 var actor_factory
 var encounter_controller
@@ -66,16 +65,12 @@ func _ready() -> void:
 	_build_player()
 	player.combat_feedback.connect(_on_combat_feedback)
 	_build_ally()
-	_build_enemy()
-	_build_ranged_enemy()
 	_build_hud()
 	_build_pause_menu()
 	_build_mobile_controls()
 	hud.next_level_requested.connect(_load_level_two)
-	encounter_controller.begin(
-		"LEVEL %d ENCOUNTER" % level_number,
-		"DEFEAT ALL HOSTILES"
-	)
+	var encounter_data := LEVEL_TWO_ENCOUNTER if level_number == 2 else LEVEL_ONE_ENCOUNTER
+	encounter_controller.start(encounter_data, actor_factory, self, player)
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
@@ -114,26 +109,8 @@ func _build_player() -> void:
 	var spawn_position := Vector3(0, 1.1, 5) if level_number == 1 else Vector3(0, 1.1, -56)
 	player = actor_factory.create_player(self, spawn_position)
 
-func _build_enemy() -> void:
-	var spawn_position := Vector3(0, 1.1, -31) if level_number == 1 else Vector3(-4, 1.1, -66)
-	var data := null if level_number == 1 else BRUISER_ENEMY_DATA
-	_spawn_melee_enemy("Level%dMelee" % level_number, spawn_position, data)
-
 func _build_ally() -> void:
 	actor_factory.create_ally(self, player, Vector3(-2.0, 1.1, 5.5))
-
-func _spawn_melee_enemy(enemy_name: String, spawn_position: Vector3, enemy_data: Resource = null) -> void:
-	actor_factory.create_melee_enemy(self, enemy_name, player, spawn_position, enemy_data)
-	encounter_controller.register_enemy()
-
-func _build_ranged_enemy() -> void:
-	var spawn_position := Vector3(8, 1.1, -35) if level_number == 1 else Vector3(5, 1.1, -70)
-	var data := null if level_number == 1 else SNIPER_ENEMY_DATA
-	_spawn_ranged_enemy("Level%dRanged" % level_number, spawn_position, data)
-
-func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3, enemy_data: Resource = null) -> void:
-	actor_factory.create_ranged_enemy(self, enemy_name, player, spawn_position, enemy_data)
-	encounter_controller.register_enemy()
 
 func _build_hud() -> void:
 	hud = HUD_SCRIPT.new()
