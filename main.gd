@@ -55,6 +55,7 @@ func _ready() -> void:
 	level.exit_reached.connect(_on_exit_entered)
 	level.build()
 	_build_player()
+	player.combat_feedback.connect(_on_combat_feedback)
 	_build_ally()
 	_build_enemy()
 	_build_ranged_enemy()
@@ -179,6 +180,9 @@ func _on_checkpoint_entered(number: int) -> void:
 		checkpoint = number
 		player.respawn_position = player.global_position
 		hud.set_checkpoint(checkpoint)
+
+func _on_combat_feedback(message: String, color: Color) -> void:
+	hud.set_status(message, color)
 
 func _on_exit_entered() -> void:
 	if completion_shown:

@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+signal combat_feedback(message: String, color: Color)
+
 const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
 const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
 const ATTACK_COMPONENT_SCRIPT := preload("res://components/attack_component.gd")
@@ -151,19 +153,24 @@ func _execute_action(action, damage_type: String, action_color: Color, scale_amo
 		velocity = aim_resolver.get_direction(true) * (character_data.dodge_speed + 4.0)
 		dodge_timer = 0.22
 		invulnerability_timer = 0.32
-		attack_component.perform_area_attack(
+		var hit_count: int = attack_component.perform_area_attack(
 			self, action.range, action.damage, damage_type,
 			aim_resolver.get_direction(true) * action.knockback,
 			aim_resolver.get_direction(true), action.arc_degrees
 		)
+		if hit_count > 0:
+			notify_attack_hit(damage_type, hit_count)
 	elif action.style == "guard":
 		invulnerability_timer = 0.8
+		combat_feedback.emit("%s ACTIVE" % action.display_name, action_color)
 	else:
-		attack_component.perform_area_attack(
+		var hit_count: int = attack_component.perform_area_attack(
 			self, action.range, action.damage, damage_type,
 			aim_resolver.get_direction(true) * action.knockback,
 			aim_resolver.get_direction(true), action.arc_degrees
 		)
+		if hit_count > 0:
+			notify_attack_hit(damage_type, hit_count)
 	_play_action_animation(action_color, scale_amount)
 
 func _fire_projectile(action, damage_type: String) -> void:
@@ -180,6 +187,13 @@ func _fire_projectile(action, damage_type: String) -> void:
 		action.knockback,
 		action.projectile_color
 	)
+
+func notify_attack_hit(damage_type: String, hit_count := 1) -> void:
+	var message := "HIT CONFIRMED" if hit_count == 1 else "HITS CONFIRMED x%d" % hit_count
+	var color := Color("#ffd36b") if damage_type == "heavy" else Color("#9fe8ff")
+	combat_feedback.emit(message, color)
+	if get_parent().has_method("play_feedback"):
+		get_parent().play_feedback(520.0 if damage_type == "heavy" else 700.0, 0.06)
 
 func _create_legacy_action(action_id: String):
 	var action = preload("res://data/action_data.gd").new()

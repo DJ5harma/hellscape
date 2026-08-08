@@ -103,5 +103,7 @@ func _try_hit_target() -> bool:
 				source if source else self,
 				impact_direction * knockback_strength
 			))
+			if is_instance_valid(source) and source.has_method("notify_attack_hit"):
+				source.notify_attack_hit(damage_type)
 			return true
 	return false
