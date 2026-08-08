@@ -21,7 +21,20 @@ func setup(actor: Node, health_limit: float, energy_limit := 0.0) -> void:
 	tracked_actor = actor
 	max_health = maxf(health_limit, 1.0)
 	max_energy = maxf(energy_limit, 0.0)
+	_clear_bars()
 	_build()
+
+func _clear_bars() -> void:
+	if is_instance_valid(health_sprite):
+		remove_child(health_sprite)
+		health_sprite.free()
+	if is_instance_valid(energy_sprite):
+		remove_child(energy_sprite)
+		energy_sprite.free()
+	health_sprite = null
+	energy_sprite = null
+	health_texture = null
+	energy_texture = null
 
 func _build() -> void:
 	position = Vector3(0.0, 1.35, 0.0)
