@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
 const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
+const WORLD_STATUS_BARS_SCRIPT := preload("res://components/world_status_bars.gd")
 
 @export var boss_data: Resource
 var target: CharacterBody3D
@@ -22,6 +23,11 @@ func _ready() -> void:
 	damageable.initialize(health)
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
+	var status_bars = WORLD_STATUS_BARS_SCRIPT.new()
+	status_bars.name = "WorldStatusBars"
+	add_child(status_bars)
+	status_bars.setup(self, health)
+	status_bars.position.y = 2.1
 	telegraph_label = Label3D.new()
 	telegraph_label.position = Vector3(0.0, 3.0, 0.0)
 	telegraph_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED

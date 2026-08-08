@@ -3,6 +3,7 @@ extends CharacterBody3D
 const ATTACK_COMPONENT_SCRIPT := preload("res://components/attack_component.gd")
 const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
 const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
+const WORLD_STATUS_BARS_SCRIPT := preload("res://components/world_status_bars.gd")
 
 var target: CharacterBody3D
 @export var ally_data: Resource
@@ -29,7 +30,12 @@ func _ready() -> void:
 	damageable.name = "Damageable"
 	add_child(damageable)
 	damageable.initialize(health)
+	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
+	var status_bars = WORLD_STATUS_BARS_SCRIPT.new()
+	status_bars.name = "WorldStatusBars"
+	add_child(status_bars)
+	status_bars.setup(self, health)
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
@@ -109,6 +115,9 @@ func _on_died() -> void:
 	velocity = Vector3.ZERO
 	if is_instance_valid(visual):
 		_set_visual_color(Color("#6b7775"))
+
+func _on_damaged(_info) -> void:
+	health = damageable.health
 
 func _revive() -> void:
 	downed = false

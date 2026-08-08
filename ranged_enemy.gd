@@ -3,6 +3,7 @@ extends CharacterBody3D
 const PROJECTILE_SCENE := preload("res://projectile.tscn")
 const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
 const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
+const WORLD_STATUS_BARS_SCRIPT := preload("res://components/world_status_bars.gd")
 
 @export var enemy_data: Resource
 
@@ -33,7 +34,12 @@ func _ready() -> void:
 	health_label.font_size = 32
 	health_label.outline_size = 8
 	health_label.modulate = Color("#e4b9ff")
+	health_label.visible = false
 	add_child(health_label)
+	var status_bars = WORLD_STATUS_BARS_SCRIPT.new()
+	status_bars.name = "WorldStatusBars"
+	add_child(status_bars)
+	status_bars.setup(self, health)
 	telegraph_label = Label3D.new()
 	telegraph_label.name = "TelegraphLabel"
 	telegraph_label.position = Vector3(0.0, 2.7, 0.0)

@@ -6,6 +6,7 @@ const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
 const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
 const ATTACK_COMPONENT_SCRIPT := preload("res://components/attack_component.gd")
 const AIM_RESOLVER_SCRIPT := preload("res://components/aim_resolver.gd")
+const WORLD_STATUS_BARS_SCRIPT := preload("res://components/world_status_bars.gd")
 const PROJECTILE_SCENE := preload("res://projectile.tscn")
 
 @export var look_sensitivity := 0.003
@@ -67,6 +68,10 @@ func _ready() -> void:
 	attack_component = ATTACK_COMPONENT_SCRIPT.new()
 	attack_component.name = "AttackComponent"
 	add_child(attack_component)
+	var status_bars = WORLD_STATUS_BARS_SCRIPT.new()
+	status_bars.name = "WorldStatusBars"
+	add_child(status_bars)
+	status_bars.setup(self, character_data.max_health, character_data.max_energy)
 
 func set_character_data(new_data: Resource) -> void:
 	character_data = new_data
@@ -86,6 +91,9 @@ func set_character_data(new_data: Resource) -> void:
 		visual.material_override = material
 	if is_instance_valid(damageable):
 		damageable.initialize(character_data.max_health)
+	var status_bars = get_node_or_null("WorldStatusBars")
+	if status_bars:
+		status_bars.setup(self, character_data.max_health, character_data.max_energy)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:

@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
 const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
+const WORLD_STATUS_BARS_SCRIPT := preload("res://components/world_status_bars.gd")
 
 @export var enemy_data: Resource
 
@@ -33,7 +34,12 @@ func _ready() -> void:
 	health_label.font_size = 32
 	health_label.outline_size = 8
 	health_label.modulate = Color("#ffb3b3")
+	health_label.visible = false
 	add_child(health_label)
+	var status_bars = WORLD_STATUS_BARS_SCRIPT.new()
+	status_bars.name = "WorldStatusBars"
+	add_child(status_bars)
+	status_bars.setup(self, health)
 	if enemy_data and enemy_data.archetype == "bruiser":
 		shield_label = Label3D.new()
 		shield_label.name = "ShieldLabel"
