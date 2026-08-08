@@ -1,11 +1,17 @@
 extends CharacterBody3D
 
+const ATTACK_COMPONENT_SCRIPT := preload("res://components/attack_component.gd")
+
 var target: CharacterBody3D
 var attack_cooldown := 0.0
 var visual: MeshInstance3D
+var attack_component
 
 func _ready() -> void:
 	visual = get_node_or_null("MeshInstance3D")
+	attack_component = ATTACK_COMPONENT_SCRIPT.new()
+	attack_component.name = "AttackComponent"
+	add_child(attack_component)
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
@@ -19,7 +25,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity = Vector3.ZERO
 	var nearest_enemy: Node3D
-	var nearest_distance := 9.0
+	var nearest_distance := 2.0
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy):
 			var distance := global_position.distance_to(enemy.global_position)
@@ -27,7 +33,7 @@ func _physics_process(delta: float) -> void:
 				nearest_enemy = enemy
 				nearest_distance = distance
 	if nearest_enemy and attack_cooldown == 0.0:
-		nearest_enemy.take_damage(1)
+		attack_component.perform_area_attack(self, 1.8, 1, "ally")
 		attack_cooldown = 1.2
 		if is_instance_valid(visual):
 			var tween := create_tween()

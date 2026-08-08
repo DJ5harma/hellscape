@@ -25,6 +25,7 @@ data/
 ├── character_data.gd   Shared character-stat resource type
 └── default_character.tres Prototype fighter configuration
 components/
+├── attack_component.gd  Physics-based attacker hit queries
 ├── damage_info.gd      Attack payload
 └── damageable.gd       Shared health and death handling
 level/
@@ -51,6 +52,9 @@ level/
 - Attackers detect hits and send `DamageInfo`; targets expose `take_damage()`
   and delegate health/death behavior to `Damageable`. Targets never poll for
   incoming attacks.
+- `AttackComponent` performs physics-based area queries for melee and area
+  attacks. Projectile collision remains owned by the projectile because it is
+  itself the attack source.
 - Procedural graybox construction lives in `level/graybox_level.gd`; replace
   this builder with authored `.tscn` scenes when the layout stabilizes.
 - Placeholder audio is isolated behind `FeedbackAudio`; replacing generated

@@ -2,6 +2,7 @@ extends CharacterBody3D
 
 const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
 const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
+const ATTACK_COMPONENT_SCRIPT := preload("res://components/attack_component.gd")
 
 @export var look_sensitivity := 0.003
 @export var character_data: Resource
@@ -23,6 +24,7 @@ var dodge_cooldown := 0.0
 var attack_damage := 1
 var attack_range := 3.0
 var damageable
+var attack_component
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -45,6 +47,9 @@ func _ready() -> void:
 	damageable.initialize(character_data.max_health)
 	damageable.damaged.connect(_on_damaged)
 	damageable.died.connect(_on_died)
+	attack_component = ATTACK_COMPONENT_SCRIPT.new()
+	attack_component.name = "AttackComponent"
+	add_child(attack_component)
 
 func set_character_data(new_data: Resource) -> void:
 	character_data = new_data
@@ -99,13 +104,8 @@ func basic_attack() -> void:
 	is_attacking = true
 	attack_damage = character_data.basic_damage
 	attack_range = character_data.basic_range
-	_damage_nearby_enemies(attack_range, attack_damage)
+	attack_component.perform_area_attack(self, attack_range, attack_damage, "basic")
 	_play_action_animation(Color("#8ed8ff"), 1.2)
-
-func _damage_nearby_enemies(range: float, damage: int) -> void:
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < range:
-			enemy.take_damage(damage)
 
 func use_special() -> void:
 	if energy < character_data.special_cost:
@@ -113,10 +113,8 @@ func use_special() -> void:
 	energy -= character_data.special_cost
 	attack_damage = character_data.special_damage
 	attack_range = character_data.special_range
+	attack_component.perform_area_attack(self, attack_range, character_data.special_damage, "special")
 	_play_action_animation(Color("#cf9aff"), 1.35)
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < character_data.special_range:
-			enemy.take_damage(character_data.special_damage)
 
 func use_third_attack() -> void:
 	if energy < character_data.heavy_cost:
@@ -126,10 +124,8 @@ func use_third_attack() -> void:
 	is_attacking = true
 	attack_damage = character_data.heavy_damage
 	attack_range = character_data.heavy_range
+	attack_component.perform_area_attack(self, attack_range, character_data.heavy_damage, "heavy")
 	_play_action_animation(Color("#ffd36b"), 1.5)
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < character_data.heavy_range:
-			enemy.take_damage(character_data.heavy_damage)
 
 func jump() -> void:
 	if is_on_floor() and dodge_timer <= 0.0:
