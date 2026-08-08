@@ -5,6 +5,8 @@ const ENEMY_SCRIPT := preload("res://enemy.gd")
 const RANGED_ENEMY_SCRIPT := preload("res://ranged_enemy.gd")
 const ALLY_SCRIPT := preload("res://ally.gd")
 const MOBILE_CONTROLS_SCRIPT := preload("res://mobile_controls.gd")
+const FEEDBACK_AUDIO_SCRIPT := preload("res://systems/feedback_audio.gd")
+const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
 
 var status_label: Label
 var checkpoint_label: Label
@@ -16,6 +18,8 @@ var encounter_complete := false
 var player: CharacterBody3D
 var encounter_stage := 1
 var remaining_enemies := 2
+var feedback_audio
+var level
 
 var colors := {
 	"floor": Color("#38434a"),
@@ -27,8 +31,15 @@ var colors := {
 }
 
 func _ready() -> void:
-	_build_lighting()
-	_build_level()
+	feedback_audio = FEEDBACK_AUDIO_SCRIPT.new()
+	feedback_audio.name = "FeedbackAudio"
+	add_child(feedback_audio)
+	level = LEVEL_SCRIPT.new()
+	level.name = "GrayboxLevel"
+	add_child(level)
+	level.checkpoint_reached.connect(_on_checkpoint_entered)
+	level.exit_reached.connect(_on_exit_entered)
+	level.build()
 	_build_player()
 	_build_ally()
 	_build_enemy()
@@ -40,90 +51,6 @@ func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(health_label):
 		health_label.text = "HEALTH %d" % player.health
 		energy_label.text = "ENERGY %d / 100" % roundi(player.energy)
-
-func _build_lighting() -> void:
-	var world_environment := WorldEnvironment.new()
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("#10171c")
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("#8098aa")
-	environment.ambient_light_energy = 0.65
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	world_environment.environment = environment
-	add_child(world_environment)
-
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-48.0, -28.0, 0.0)
-	sun.light_color = Color("#d9e7ff")
-	sun.light_energy = 1.2
-	sun.shadow_enabled = true
-	add_child(sun)
-
-func _build_level() -> void:
-	# A single connected route: start room, corridor, combat yard, and extraction.
-	add_box("StartFloor", Vector3(0, -0.25, 0), Vector3(18, 0.5, 18), colors.floor)
-	add_box("StartLeftWall", Vector3(-9, 2.5, 0), Vector3(0.5, 5, 18), colors.wall)
-	add_box("StartRightWall", Vector3(9, 2.5, 0), Vector3(0.5, 5, 18), colors.wall)
-	add_box("StartBackWall", Vector3(0, 2.5, 9), Vector3(18, 5, 0.5), colors.wall)
-
-	add_box("CorridorFloor", Vector3(0, -0.25, -16), Vector3(10, 0.5, 18), colors.floor)
-	add_box("CorridorLeftWall", Vector3(-5, 2.5, -16), Vector3(0.5, 5, 18), colors.wall)
-	add_box("CorridorRightWall", Vector3(5, 2.5, -16), Vector3(0.5, 5, 18), colors.wall)
-	add_box("CorridorRoofBeam", Vector3(0, 5, -16), Vector3(10, 0.5, 18), colors.wall)
-
-	add_box("CombatYardFloor", Vector3(0, -0.25, -32), Vector3(26, 0.5, 14), colors.floor)
-	add_box("YardLeftWall", Vector3(-13, 2.5, -32), Vector3(0.5, 5, 14), colors.wall)
-	add_box("YardRightWall", Vector3(13, 2.5, -32), Vector3(0.5, 5, 14), colors.wall)
-	add_box("YardFarWall", Vector3(0, 2.5, -39), Vector3(26, 5, 0.5), colors.wall)
-
-	add_box("ExitFloor", Vector3(0, -0.25, -47), Vector3(14, 0.5, 16), colors.floor)
-	add_box("ExitLeftWall", Vector3(-7, 2.5, -47), Vector3(0.5, 5, 16), colors.wall)
-	add_box("ExitRightWall", Vector3(7, 2.5, -47), Vector3(0.5, 5, 16), colors.wall)
-
-	# Cover and navigation landmarks for future combat encounters.
-	add_box("CoverA", Vector3(-4, 1, -29), Vector3(3, 2, 1.5), colors.cover)
-	add_box("CoverB", Vector3(5, 1, -35), Vector3(3, 2, 1.5), colors.cover)
-	add_box("BlockedPassage", Vector3(0, 1.5, -40), Vector3(5, 3, 1), colors.hazard)
-	for position in [Vector3(-8, 2, -32), Vector3(8, 2, -32), Vector3(-4, 2, -44), Vector3(4, 2, -44)]:
-		add_box("Pillar", position, Vector3(1, 4, 1), colors.wall)
-
-	add_box("ExitGateLeft", Vector3(-4.5, 3, -54), Vector3(1, 6, 1), colors.objective)
-	add_box("ExitGateRight", Vector3(4.5, 3, -54), Vector3(1, 6, 1), colors.objective)
-	add_box("ExitGateTop", Vector3(0, 6, -54), Vector3(10, 1, 1), colors.objective)
-	add_box("LockedGate", Vector3(0, 2.5, -50), Vector3(8, 5, 0.5), colors.hazard)
-	add_box("SecondFloor", Vector3(0, -0.25, -66), Vector3(18, 0.5, 22), colors.floor)
-	add_box("SecondLeftWall", Vector3(-9, 2.5, -66), Vector3(0.5, 5, 22), colors.wall)
-	add_box("SecondRightWall", Vector3(9, 2.5, -66), Vector3(0.5, 5, 22), colors.wall)
-	add_box("SecondFarWall", Vector3(0, 2.5, -77), Vector3(18, 5, 0.5), colors.wall)
-	add_box("SecondCoverA", Vector3(-5, 1, -62), Vector3(3, 2, 1.5), colors.cover)
-	add_box("SecondCoverB", Vector3(5, 1, -70), Vector3(3, 2, 1.5), colors.cover)
-	add_box("FinalGate", Vector3(0, 2.5, -73), Vector3(8, 5, 0.5), colors.hazard)
-
-	_add_checkpoint(Vector3(0, 0.2, -8), 1)
-	_add_checkpoint(Vector3(0, 0.2, -25), 2)
-	_add_checkpoint(Vector3(0, 0.2, -45), 3)
-	_add_exit_trigger(Vector3(0, 1.5, -78))
-
-func add_box(box_name: String, position: Vector3, size: Vector3, color: Color) -> void:
-	var body := StaticBody3D.new()
-	body.name = box_name
-	body.position = position
-	var mesh_instance := MeshInstance3D.new()
-	var box_mesh := BoxMesh.new()
-	box_mesh.size = size
-	mesh_instance.mesh = box_mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color
-	material.roughness = 0.8
-	box_mesh.material = material
-	body.add_child(mesh_instance)
-	var collision := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = size
-	collision.shape = shape
-	body.add_child(collision)
-	add_child(body)
 
 func _build_player() -> void:
 	player = CharacterBody3D.new()
@@ -224,30 +151,6 @@ func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3) -> void:
 	enemy.add_child(collision)
 	add_child(enemy)
 
-func _add_checkpoint(position: Vector3, number: int) -> void:
-	var area := Area3D.new()
-	area.name = "Checkpoint_%d" % number
-	area.position = position
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(8, 3, 2)
-	shape.shape = box
-	area.add_child(shape)
-	area.body_entered.connect(_on_checkpoint_entered.bind(number))
-	add_child(area)
-
-func _add_exit_trigger(position: Vector3) -> void:
-	var area := Area3D.new()
-	area.name = "ExtractionTrigger"
-	area.position = position
-	var shape := CollisionShape3D.new()
-	var box := BoxShape3D.new()
-	box.size = Vector3(8, 4, 2)
-	shape.shape = box
-	area.add_child(shape)
-	area.body_entered.connect(_on_exit_entered)
-	add_child(area)
-
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -301,13 +204,13 @@ func _build_mobile_controls() -> void:
 	controls.special_pressed.connect(player.mobile_special)
 	controls.dodge_pressed.connect(player.mobile_dodge)
 
-func _on_checkpoint_entered(_body: Node3D, number: int) -> void:
+func _on_checkpoint_entered(number: int) -> void:
 	if number > checkpoint:
 		checkpoint = number
 		player.respawn_position = player.global_position
 		checkpoint_label.text = "CHECKPOINT %d / 3" % checkpoint
 
-func _on_exit_entered(_body: Node3D) -> void:
+func _on_exit_entered() -> void:
 	if encounter_complete:
 		status_label.text = "EXTRACTION REACHED  |  GRAYBOX COMPLETE"
 		status_label.add_theme_color_override("font_color", colors.objective)
@@ -327,7 +230,7 @@ func enemy_defeated() -> void:
 		player.respawn_position = Vector3(0, 1.1, -56)
 		checkpoint_label.text = "CHECKPOINT 4 / 4"
 		status_label.text = "FIRST AREA CLEAR  |  SECOND ENCOUNTER STARTING"
-		var locked_gate := get_node_or_null("LockedGate")
+		var locked_gate: Node = level.get_node_or_null("LockedGate")
 		if locked_gate:
 			locked_gate.queue_free()
 		_spawn_melee_enemy("SecondMelee", Vector3(-4, 1.1, -66))
@@ -336,26 +239,9 @@ func enemy_defeated() -> void:
 		encounter_complete = true
 		status_label.text = "ALL AREAS CLEAR  |  FINAL GATE UNLOCKED"
 		status_label.add_theme_color_override("font_color", colors.objective)
-		var final_gate := get_node_or_null("FinalGate")
+		var final_gate: Node = level.get_node_or_null("FinalGate")
 		if final_gate:
 			final_gate.queue_free()
 
 func play_feedback(frequency: float, duration: float) -> void:
-	var stream := AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = 22050
-	stream.stereo = false
-	var samples := PackedByteArray()
-	var sample_count := int(stream.mix_rate * duration)
-	for index in sample_count:
-		var envelope := 1.0 - (float(index) / float(sample_count))
-		var sample := int(sin(float(index) * TAU * frequency / stream.mix_rate) * 11000.0 * envelope)
-		samples.append(sample & 255)
-		samples.append((sample >> 8) & 255)
-	stream.data = samples
-	var player_audio := AudioStreamPlayer.new()
-	player_audio.stream = stream
-	player_audio.volume_db = -12.0
-	add_child(player_audio)
-	player_audio.finished.connect(player_audio.queue_free)
-	player_audio.play()
+	feedback_audio.play_tone(frequency, duration)
