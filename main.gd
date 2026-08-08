@@ -1,10 +1,13 @@
 extends Node3D
 
 const PLAYER_SCRIPT := preload("res://player.gd")
+const ENEMY_SCRIPT := preload("res://enemy.gd")
 
 var status_label: Label
 var checkpoint_label: Label
 var checkpoint := 0
+var encounter_complete := false
+var player: CharacterBody3D
 
 var colors := {
 	"floor": Color("#38434a"),
@@ -19,6 +22,7 @@ func _ready() -> void:
 	_build_lighting()
 	_build_level()
 	_build_player()
+	_build_enemy()
 	_build_hud()
 
 func _build_lighting() -> void:
@@ -71,6 +75,7 @@ func _build_level() -> void:
 	add_box("ExitGateLeft", Vector3(-4.5, 3, -54), Vector3(1, 6, 1), colors.objective)
 	add_box("ExitGateRight", Vector3(4.5, 3, -54), Vector3(1, 6, 1), colors.objective)
 	add_box("ExitGateTop", Vector3(0, 6, -54), Vector3(10, 1, 1), colors.objective)
+	add_box("LockedGate", Vector3(0, 2.5, -50), Vector3(8, 5, 0.5), colors.hazard)
 
 	_add_checkpoint(Vector3(0, 0.2, -8), 1)
 	_add_checkpoint(Vector3(0, 0.2, -25), 2)
@@ -98,7 +103,7 @@ func add_box(box_name: String, position: Vector3, size: Vector3, color: Color) -
 	add_child(body)
 
 func _build_player() -> void:
-	var player := CharacterBody3D.new()
+	player = CharacterBody3D.new()
 	player.name = "Player"
 	player.position = Vector3(0, 1.1, 5)
 	player.set_script(PLAYER_SCRIPT)
@@ -118,6 +123,29 @@ func _build_player() -> void:
 	collision.shape = capsule_shape
 	player.add_child(collision)
 	add_child(player)
+
+func _build_enemy() -> void:
+	var enemy := CharacterBody3D.new()
+	enemy.name = "TrainingEnemy"
+	enemy.position = Vector3(0, 1.1, -31)
+	enemy.set_script(ENEMY_SCRIPT)
+	enemy.target = player
+	var mesh_instance := MeshInstance3D.new()
+	var capsule_mesh := CapsuleMesh.new()
+	capsule_mesh.height = 1.8
+	capsule_mesh.radius = 0.45
+	mesh_instance.mesh = capsule_mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color("#d84c5c")
+	capsule_mesh.material = material
+	enemy.add_child(mesh_instance)
+	var collision := CollisionShape3D.new()
+	var capsule_shape := CapsuleShape3D.new()
+	capsule_shape.height = 1.8
+	capsule_shape.radius = 0.45
+	collision.shape = capsule_shape
+	enemy.add_child(collision)
+	add_child(enemy)
 
 func _add_checkpoint(position: Vector3, number: int) -> void:
 	var area := Area3D.new()
@@ -157,12 +185,30 @@ func _build_hud() -> void:
 	checkpoint_label.add_theme_font_size_override("font_size", 20)
 	checkpoint_label.text = "CHECKPOINT 0 / 3"
 	layer.add_child(checkpoint_label)
+	var help_label := Label.new()
+	help_label.position = Vector2(28, 92)
+	help_label.add_theme_color_override("font_color", Color("#f5c76b"))
+	help_label.add_theme_font_size_override("font_size", 18)
+	help_label.text = "SPACE to attack  |  Red enemy: 3 hits"
+	layer.add_child(help_label)
 
 func _on_checkpoint_entered(_body: Node3D, number: int) -> void:
 	if number > checkpoint:
 		checkpoint = number
+		player.respawn_position = player.global_position
 		checkpoint_label.text = "CHECKPOINT %d / 3" % checkpoint
 
 func _on_exit_entered(_body: Node3D) -> void:
-	status_label.text = "EXTRACTION REACHED  |  GRAYBOX COMPLETE"
+	if encounter_complete:
+		status_label.text = "EXTRACTION REACHED  |  GRAYBOX COMPLETE"
+		status_label.add_theme_color_override("font_color", colors.objective)
+	else:
+		status_label.text = "GATE LOCKED  |  DEFEAT THE RED ENEMY FIRST"
+
+func enemy_defeated() -> void:
+	encounter_complete = true
+	status_label.text = "AREA CLEAR  |  EXTRACTION GATE UNLOCKED"
 	status_label.add_theme_color_override("font_color", colors.objective)
+	var locked_gate := get_node_or_null("LockedGate")
+	if locked_gate:
+		locked_gate.queue_free()

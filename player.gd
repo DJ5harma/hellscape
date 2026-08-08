@@ -9,6 +9,10 @@ var camera_pivot: Node3D
 var camera: Camera3D
 var yaw := 0.0
 var pitch := -0.22
+var health := 100
+var respawn_position := Vector3.ZERO
+var attack_timer := 0.0
+var is_attacking := false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -20,6 +24,7 @@ func _ready() -> void:
 	camera.look_at_from_position(camera.position, Vector3.ZERO)
 	camera_pivot.add_child(camera)
 	camera.current = true
+	respawn_position = global_position
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -31,8 +36,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
+		attack_timer = 0.25
+		is_attacking = true
 
 func _physics_process(delta: float) -> void:
+	if attack_timer > 0.0:
+		attack_timer -= delta
+	else:
+		is_attacking = false
 	var input_2d := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	var input_direction := Vector3(input_2d.x, 0.0, input_2d.y)
 	if Input.is_key_pressed(KEY_A):
@@ -53,3 +65,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y = -0.2
 	move_and_slide()
+
+func take_damage(amount: int) -> void:
+	health -= amount
+	if health <= 0:
+		global_position = respawn_position
+		velocity = Vector3.ZERO
+		health = 100
