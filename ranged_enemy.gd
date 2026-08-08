@@ -8,7 +8,7 @@ const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
 
 var target: CharacterBody3D
 var health := 4
-var shot_cooldown := 1.0
+var shot_cooldown := 0.8
 var telegraph_timer := 0.0
 var shot_pending := false
 var visual: MeshInstance3D
@@ -65,9 +65,9 @@ func _physics_process(delta: float) -> void:
 	var preferred_min: float = enemy_data.preferred_min_range if enemy_data else 7.0
 	var preferred_max: float = enemy_data.preferred_max_range if enemy_data else 13.0
 	if offset.length() < preferred_min:
-		velocity = -offset.normalized() * 1.8
+		velocity = -offset.normalized() * 2.4
 	elif offset.length() > preferred_max:
-		velocity = offset.normalized() * 1.8
+		velocity = offset.normalized() * 2.4
 	else:
 		velocity = Vector3.ZERO
 	if offset.length() < 20.0:
@@ -77,7 +77,7 @@ func _physics_process(delta: float) -> void:
 			telegraph_label.visible = false
 			_set_visual_color(Color("#ffdf62"))
 			_shoot()
-			shot_cooldown = enemy_data.shot_cooldown if enemy_data else 2.0
+			shot_cooldown = enemy_data.shot_cooldown if enemy_data else 1.4
 		elif not shot_pending and shot_cooldown == 0.0:
 			shot_pending = true
 			telegraph_timer = 0.45

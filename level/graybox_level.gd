@@ -81,7 +81,7 @@ func _build_geometry() -> void:
 	_add_mountain_wall(Vector3(18, 4, -10), Vector3(5, 8, 80))
 	_add_mountain_wall(Vector3(-24, 5, -82), Vector3(6, 10, 70))
 	_add_mountain_wall(Vector3(24, 5, -82), Vector3(6, 10, 70))
-	_add_stairs(Vector3(10, 0, -72), 5, 2.4, 1.8)
+	_add_side_stairs(Vector3(8.0, 0.0, -70.0), 6, 4.0, 1.2)
 	_add_stairs(Vector3(-11, 0, -102), 6, 2.2, 1.7)
 	add_box("LockedGate", Vector3(0, 2.5, -50), Vector3(24, 5, 0.5), colors.hazard)
 	add_box("FinalGate", Vector3(0, 2.5, -115), Vector3(42, 5, 0.5), colors.hazard)
@@ -126,14 +126,14 @@ func _build_nature_kit_decoration() -> void:
 		Vector3(-7.0, 0.0, -130.0)
 	]:
 		_add_asset(NATURE_GRASS_SCENE, position, Vector3(0, randf_range(-PI, PI), 0), Vector3.ONE * randf_range(0.8, 1.4), Vector3.ZERO, colors.grass)
-	_add_asset(NATURE_STONE_STAIRS_SCENE, Vector3(10.0, 0.0, -72.0), Vector3.ZERO, Vector3(1.8, 1.8, 1.8), Vector3.ZERO, colors.rock)
+	_add_asset(NATURE_STONE_STAIRS_SCENE, Vector3(11.5, 1.0, -70.0), Vector3(0, PI * 0.5, 0), Vector3(1.8, 1.8, 1.8), Vector3.ZERO, colors.rock)
 	_add_asset(NATURE_STONE_BRIDGE_SCENE, Vector3(-5.0, 0.0, -100.0), Vector3(0, PI * 0.5, 0), Vector3(1.8, 1.8, 1.8), Vector3.ZERO, colors.rock)
 	_add_asset(
 		NATURE_STONE_BRIDGE_SCENE,
-		Vector3(5.0, 1.5, -70.0),
+		Vector3(11.5, 3.0, -70.0),
 		Vector3(0, PI * 0.5, 0),
 		Vector3(2.4, 2.4, 2.4),
-		Vector3(5.0, 1.0, 4.0),
+		Vector3(7.0, 1.0, 5.0),
 		colors.rock
 	)
 	_add_asset(NATURE_CLIFF_CORNER_SCENE, Vector3(-15.0, 0.0, -48.0), Vector3.ZERO, Vector3(2.0, 2.0, 2.0), Vector3.ZERO, colors.mountain)
@@ -201,6 +201,16 @@ func _add_stairs(position: Vector3, step_count: int, step_width: float, step_dep
 	for index in step_count:
 		var step_position := position + Vector3(0.0, index * 0.35, -index * step_depth)
 		add_box("MountainStair", step_position, Vector3(step_width, 0.35, step_depth * (index + 1)), colors.rock)
+
+func _add_side_stairs(position: Vector3, step_count: int, step_width: float, step_depth: float) -> void:
+	for index in step_count:
+		var step_position := position + Vector3(index * step_depth, index * 0.45, 0.0)
+		add_box(
+			"MountainSideStair",
+			step_position,
+			Vector3(step_depth * 1.2, 0.45, step_width),
+			colors.rock
+		)
 
 func _add_boulder(position: Vector3, scale := Vector3.ONE) -> void:
 	var mesh_instance := MeshInstance3D.new()

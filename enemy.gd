@@ -10,7 +10,7 @@ var health := 3
 var attack_cooldown := 0.0
 var attack_windup := 0.0
 var attack_pending := false
-var speed := 2.3
+var speed := 3.2
 var visual: MeshInstance3D
 var damageable
 var hit_stun := 0.0
@@ -111,13 +111,13 @@ func _attack_range() -> float:
 	return enemy_data.attack_range if enemy_data else 1.7
 
 func _attack_damage() -> int:
-	return enemy_data.attack_damage if enemy_data else 10
+	return enemy_data.attack_damage if enemy_data else 12
 
 func _attack_windup() -> float:
 	return enemy_data.attack_windup if enemy_data else 0.25
 
 func _attack_cooldown() -> float:
-	return enemy_data.attack_cooldown if enemy_data else 1.0
+	return enemy_data.attack_cooldown if enemy_data else 0.75
 
 func _on_damaged(info) -> void:
 	health = damageable.health
