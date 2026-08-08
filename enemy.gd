@@ -1,5 +1,8 @@
 extends CharacterBody3D
 
+const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
+const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
+
 var target: CharacterBody3D
 var health := 3
 var attack_cooldown := 0.0
@@ -7,9 +10,16 @@ var attack_windup := 0.0
 var attack_pending := false
 var speed := 2.3
 var visual: MeshInstance3D
+var damageable
 
 func _ready() -> void:
 	visual = get_node_or_null("MeshInstance3D")
+	damageable = DAMAGEABLE_SCRIPT.new()
+	damageable.name = "Damageable"
+	add_child(damageable)
+	damageable.initialize(health)
+	damageable.damaged.connect(_on_damaged)
+	damageable.died.connect(_on_died)
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
@@ -38,15 +48,19 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func take_damage(amount: int) -> void:
-	health -= amount
+	damageable.receive_damage(DAMAGE_INFO_SCRIPT.new(amount, "combat", null), 0.12)
+
+func _on_damaged(_info) -> void:
+	health = damageable.health
 	get_parent().play_feedback(220.0, 0.08)
 	if is_instance_valid(visual):
 		_set_visual_color(Color.WHITE)
 		var tween := create_tween()
 		tween.tween_method(_set_visual_color, Color.WHITE, Color("#d84c5c"), 0.18)
-	if health <= 0:
-		get_parent().enemy_defeated()
-		queue_free()
+
+func _on_died() -> void:
+	get_parent().enemy_defeated()
+	queue_free()
 
 func _set_visual_color(color: Color) -> void:
 	if not is_instance_valid(visual):

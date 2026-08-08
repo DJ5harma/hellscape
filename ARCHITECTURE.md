@@ -24,6 +24,9 @@ systems/
 data/
 ├── character_data.gd   Shared character-stat resource type
 └── default_character.tres Prototype fighter configuration
+components/
+├── damage_info.gd      Attack payload
+└── damageable.gd       Shared health and death handling
 level/
 └── graybox_level.gd    Static geometry, checkpoints, and exit trigger
 ```
@@ -45,6 +48,9 @@ level/
 - Character balance belongs in `data/*.tres` resources. The player controller
   reads movement, survivability, energy, and ability values from its assigned
   resource, so new characters can reuse the controller with different data.
+- Attackers detect hits and send `DamageInfo`; targets expose `take_damage()`
+  and delegate health/death behavior to `Damageable`. Targets never poll for
+  incoming attacks.
 - Procedural graybox construction lives in `level/graybox_level.gd`; replace
   this builder with authored `.tscn` scenes when the layout stabilizes.
 - Placeholder audio is isolated behind `FeedbackAudio`; replacing generated

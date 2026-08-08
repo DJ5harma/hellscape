@@ -1,5 +1,8 @@
 extends CharacterBody3D
 
+const DAMAGEABLE_SCRIPT := preload("res://components/damageable.gd")
+const DAMAGE_INFO_SCRIPT := preload("res://components/damage_info.gd")
+
 @export var look_sensitivity := 0.003
 @export var character_data: Resource
 
@@ -19,6 +22,7 @@ var dodge_timer := 0.0
 var dodge_cooldown := 0.0
 var attack_damage := 1
 var attack_range := 3.0
+var damageable
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -35,6 +39,12 @@ func _ready() -> void:
 	if character_data == null:
 		character_data = load("res://data/default_character.tres")
 	set_character_data(character_data)
+	damageable = DAMAGEABLE_SCRIPT.new()
+	damageable.name = "Damageable"
+	add_child(damageable)
+	damageable.initialize(character_data.max_health)
+	damageable.damaged.connect(_on_damaged)
+	damageable.died.connect(_on_died)
 
 func set_character_data(new_data: Resource) -> void:
 	character_data = new_data
@@ -46,6 +56,8 @@ func set_character_data(new_data: Resource) -> void:
 		var material := StandardMaterial3D.new()
 		material.albedo_color = character_data.visual_color
 		visual.material_override = material
+	if is_instance_valid(damageable):
+		damageable.initialize(character_data.max_health)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -194,12 +206,15 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func take_damage(amount: int) -> void:
-	if invulnerability_timer > 0.0:
-		return
+	damageable.receive_damage(DAMAGE_INFO_SCRIPT.new(amount, "combat", null), invulnerability_timer)
+
+func _on_damaged(_info) -> void:
+	health = damageable.health
 	get_parent().play_feedback(110.0, 0.12)
 	_play_action_animation(Color("#ff6464"), 0.85)
-	health -= amount
-	if health <= 0:
-		global_position = respawn_position
-		velocity = Vector3.ZERO
-		health = character_data.max_health
+
+func _on_died() -> void:
+	global_position = respawn_position
+	velocity = Vector3.ZERO
+	damageable.initialize(character_data.max_health)
+	health = character_data.max_health
