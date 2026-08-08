@@ -2,13 +2,17 @@ extends Node3D
 
 const PLAYER_SCRIPT := preload("res://player.gd")
 const ENEMY_SCRIPT := preload("res://enemy.gd")
+const RANGED_ENEMY_SCRIPT := preload("res://ranged_enemy.gd")
 const MOBILE_CONTROLS_SCRIPT := preload("res://mobile_controls.gd")
 
 var status_label: Label
 var checkpoint_label: Label
+var health_label: Label
+var energy_label: Label
 var checkpoint := 0
 var encounter_complete := false
 var player: CharacterBody3D
+var remaining_enemies := 2
 
 var colors := {
 	"floor": Color("#38434a"),
@@ -24,8 +28,14 @@ func _ready() -> void:
 	_build_level()
 	_build_player()
 	_build_enemy()
+	_build_ranged_enemy()
 	_build_hud()
 	_build_mobile_controls()
+
+func _process(_delta: float) -> void:
+	if is_instance_valid(player) and is_instance_valid(health_label):
+		health_label.text = "HEALTH %d" % player.health
+		energy_label.text = "ENERGY %d / 100" % roundi(player.energy)
 
 func _build_lighting() -> void:
 	var world_environment := WorldEnvironment.new()
@@ -132,6 +142,7 @@ func _build_enemy() -> void:
 	enemy.position = Vector3(0, 1.1, -31)
 	enemy.set_script(ENEMY_SCRIPT)
 	enemy.target = player
+	enemy.add_to_group("enemies")
 	var mesh_instance := MeshInstance3D.new()
 	var capsule_mesh := CapsuleMesh.new()
 	capsule_mesh.height = 1.8
@@ -145,6 +156,30 @@ func _build_enemy() -> void:
 	var capsule_shape := CapsuleShape3D.new()
 	capsule_shape.height = 1.8
 	capsule_shape.radius = 0.45
+	collision.shape = capsule_shape
+	enemy.add_child(collision)
+	add_child(enemy)
+
+func _build_ranged_enemy() -> void:
+	var enemy := CharacterBody3D.new()
+	enemy.name = "RangedEnemy"
+	enemy.position = Vector3(8, 1.1, -35)
+	enemy.set_script(RANGED_ENEMY_SCRIPT)
+	enemy.target = player
+	enemy.add_to_group("enemies")
+	var mesh_instance := MeshInstance3D.new()
+	var capsule_mesh := CapsuleMesh.new()
+	capsule_mesh.height = 1.8
+	capsule_mesh.radius = 0.4
+	mesh_instance.mesh = capsule_mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color("#a65de0")
+	capsule_mesh.material = material
+	enemy.add_child(mesh_instance)
+	var collision := CollisionShape3D.new()
+	var capsule_shape := CapsuleShape3D.new()
+	capsule_shape.height = 1.8
+	capsule_shape.radius = 0.4
 	collision.shape = capsule_shape
 	enemy.add_child(collision)
 	add_child(enemy)
@@ -191,8 +226,18 @@ func _build_hud() -> void:
 	help_label.position = Vector2(28, 92)
 	help_label.add_theme_color_override("font_color", Color("#f5c76b"))
 	help_label.add_theme_font_size_override("font_size", 18)
-	help_label.text = "SPACE to attack  |  Red enemy: 3 hits"
+	help_label.text = "1 attack  |  2 special  |  3 heavy  |  SPACE jump  |  SHIFT dodge  |  R reset"
 	layer.add_child(help_label)
+	health_label = Label.new()
+	health_label.position = Vector2(28, 126)
+	health_label.add_theme_color_override("font_color", Color("#ff7777"))
+	health_label.add_theme_font_size_override("font_size", 18)
+	layer.add_child(health_label)
+	energy_label = Label.new()
+	energy_label.position = Vector2(28, 152)
+	energy_label.add_theme_color_override("font_color", Color("#bd8cff"))
+	energy_label.add_theme_font_size_override("font_size", 18)
+	layer.add_child(energy_label)
 
 func _build_mobile_controls() -> void:
 	var layer := CanvasLayer.new()
@@ -206,6 +251,8 @@ func _build_mobile_controls() -> void:
 	controls.movement_changed.connect(player.set_mobile_move)
 	controls.look_changed.connect(player.apply_mobile_look)
 	controls.attack_pressed.connect(player.mobile_attack)
+	controls.special_pressed.connect(player.mobile_special)
+	controls.dodge_pressed.connect(player.mobile_dodge)
 
 func _on_checkpoint_entered(_body: Node3D, number: int) -> void:
 	if number > checkpoint:
@@ -221,9 +268,13 @@ func _on_exit_entered(_body: Node3D) -> void:
 		status_label.text = "GATE LOCKED  |  DEFEAT THE RED ENEMY FIRST"
 
 func enemy_defeated() -> void:
-	encounter_complete = true
-	status_label.text = "AREA CLEAR  |  EXTRACTION GATE UNLOCKED"
-	status_label.add_theme_color_override("font_color", colors.objective)
-	var locked_gate := get_node_or_null("LockedGate")
-	if locked_gate:
-		locked_gate.queue_free()
+	remaining_enemies -= 1
+	if remaining_enemies <= 0:
+		encounter_complete = true
+		status_label.text = "AREA CLEAR  |  EXTRACTION GATE UNLOCKED"
+		status_label.add_theme_color_override("font_color", colors.objective)
+		var locked_gate := get_node_or_null("LockedGate")
+		if locked_gate:
+			locked_gate.queue_free()
+	else:
+		status_label.text = "ENEMY DEFEATED  |  %d REMAINING" % remaining_enemies

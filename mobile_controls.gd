@@ -3,12 +3,16 @@ extends Control
 signal movement_changed(value: Vector2)
 signal look_changed(delta: Vector2)
 signal attack_pressed
+signal special_pressed
+signal dodge_pressed
 
 var joystick_id := -1
 var look_id := -1
 var joystick_value := Vector2.ZERO
 var joystick_center := Vector2.ZERO
 var attack_center := Vector2.ZERO
+var special_center := Vector2.ZERO
+var dodge_center := Vector2.ZERO
 const JOYSTICK_RADIUS := 86.0
 const ATTACK_RADIUS := 64.0
 
@@ -25,10 +29,16 @@ func _input(event: InputEvent) -> void:
 	var viewport_size := get_viewport_rect().size
 	joystick_center = Vector2(130.0, viewport_size.y - 130.0)
 	attack_center = Vector2(viewport_size.x - 110.0, viewport_size.y - 125.0)
+	special_center = Vector2(viewport_size.x - 235.0, viewport_size.y - 115.0)
+	dodge_center = Vector2(viewport_size.x - 105.0, viewport_size.y - 275.0)
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			if event.position.distance_to(attack_center) <= ATTACK_RADIUS:
 				attack_pressed.emit()
+			elif event.position.distance_to(special_center) <= ATTACK_RADIUS:
+				special_pressed.emit()
+			elif event.position.distance_to(dodge_center) <= ATTACK_RADIUS:
+				dodge_pressed.emit()
 			elif event.position.x < viewport_size.x * 0.5 and event.position.y > viewport_size.y * 0.45:
 				joystick_id = event.index
 				_update_joystick(event.position)
@@ -57,8 +67,14 @@ func _draw() -> void:
 	var viewport_size := get_viewport_rect().size
 	joystick_center = Vector2(130.0, viewport_size.y - 130.0)
 	attack_center = Vector2(viewport_size.x - 110.0, viewport_size.y - 125.0)
+	special_center = Vector2(viewport_size.x - 235.0, viewport_size.y - 115.0)
+	dodge_center = Vector2(viewport_size.x - 105.0, viewport_size.y - 275.0)
 	draw_circle(joystick_center, JOYSTICK_RADIUS, Color(0.1, 0.15, 0.18, 0.45))
 	draw_arc(joystick_center, JOYSTICK_RADIUS, 0.0, TAU, 48, Color(0.5, 0.8, 1.0, 0.7), 3.0)
 	draw_circle(joystick_center + joystick_value * 48.0, 48.0, Color(0.35, 0.7, 1.0, 0.65))
 	draw_circle(attack_center, ATTACK_RADIUS, Color(0.85, 0.25, 0.3, 0.65))
 	draw_arc(attack_center, ATTACK_RADIUS, 0.0, TAU, 48, Color(1.0, 0.8, 0.7, 0.9), 3.0)
+	draw_circle(special_center, ATTACK_RADIUS, Color(0.55, 0.3, 0.85, 0.65))
+	draw_arc(special_center, ATTACK_RADIUS, 0.0, TAU, 48, Color(0.85, 0.75, 1.0, 0.9), 3.0)
+	draw_circle(dodge_center, ATTACK_RADIUS, Color(0.85, 0.65, 0.25, 0.65))
+	draw_arc(dodge_center, ATTACK_RADIUS, 0.0, TAU, 48, Color(1.0, 0.9, 0.6, 0.9), 3.0)

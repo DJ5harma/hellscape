@@ -3,6 +3,7 @@ extends CharacterBody3D
 @export var move_speed := 7.0
 @export var acceleration := 24.0
 @export var gravity := 22.0
+@export var jump_velocity := 9.0
 @export var look_sensitivity := 0.003
 
 var camera_pivot: Node3D
@@ -14,6 +15,10 @@ var respawn_position := Vector3.ZERO
 var attack_timer := 0.0
 var is_attacking := false
 var mobile_move := Vector2.ZERO
+var energy := 100.0
+var invulnerability_timer := 0.0
+var dodge_timer := 0.0
+var dodge_cooldown := 0.0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -37,9 +42,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_1:
 		attack_timer = 0.25
 		is_attacking = true
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_2:
+		use_special()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_3:
+		use_third_attack()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_SPACE:
+		jump()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_SHIFT:
+		dodge()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_R:
+		get_tree().reload_current_scene()
 
 func set_mobile_move(value: Vector2) -> void:
 	mobile_move = value
@@ -54,11 +69,57 @@ func mobile_attack() -> void:
 	attack_timer = 0.25
 	is_attacking = true
 
+func use_special() -> void:
+	if energy < 35.0:
+		return
+	energy -= 35.0
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < 5.0:
+			enemy.take_damage(2)
+
+func use_third_attack() -> void:
+	if energy < 60.0:
+		return
+	energy -= 60.0
+	attack_timer = 0.4
+	is_attacking = true
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy) and global_position.distance_to(enemy.global_position) < 7.0:
+			enemy.take_damage(3)
+
+func jump() -> void:
+	if is_on_floor() and dodge_timer <= 0.0:
+		velocity.y = jump_velocity
+
+func dodge() -> void:
+	if dodge_cooldown > 0.0 or dodge_timer > 0.0:
+		return
+	dodge_timer = 0.28
+	dodge_cooldown = 1.0
+	invulnerability_timer = 0.38
+	var dodge_direction := -transform.basis.z
+	if mobile_move.length() > 0.05:
+		dodge_direction = (transform.basis * Vector3(mobile_move.x, 0.0, mobile_move.y)).normalized()
+	velocity = dodge_direction * 13.0
+
+func mobile_special() -> void:
+	use_special()
+
+func mobile_dodge() -> void:
+	dodge()
+
 func _physics_process(delta: float) -> void:
+	invulnerability_timer = maxf(invulnerability_timer - delta, 0.0)
+	dodge_cooldown = maxf(dodge_cooldown - delta, 0.0)
+	energy = minf(energy + 10.0 * delta, 100.0)
 	if attack_timer > 0.0:
 		attack_timer -= delta
 	else:
 		is_attacking = false
+	if dodge_timer > 0.0:
+		dodge_timer -= delta
+		move_and_slide()
+		return
 	var input_2d := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 	if mobile_move.length() > 0.05:
 		input_2d = mobile_move
@@ -83,6 +144,8 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func take_damage(amount: int) -> void:
+	if invulnerability_timer > 0.0:
+		return
 	health -= amount
 	if health <= 0:
 		global_position = respawn_position
