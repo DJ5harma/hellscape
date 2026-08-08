@@ -1,0 +1,6 @@
+{
+    "watch": ["."],
+    "ext": "gd,tscn,tres,godot,gdshader",
+    "ignore": [".godot/", ".git/"],
+    "exec": "godot . -f --resolution 600x800 --override-project-settings display/window/size/initial_position_type=2"
+  }

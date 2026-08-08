@@ -2,6 +2,7 @@ extends Node3D
 
 const PLAYER_SCRIPT := preload("res://player.gd")
 const ENEMY_SCRIPT := preload("res://enemy.gd")
+const MOBILE_CONTROLS_SCRIPT := preload("res://mobile_controls.gd")
 
 var status_label: Label
 var checkpoint_label: Label
@@ -24,6 +25,7 @@ func _ready() -> void:
 	_build_player()
 	_build_enemy()
 	_build_hud()
+	_build_mobile_controls()
 
 func _build_lighting() -> void:
 	var world_environment := WorldEnvironment.new()
@@ -191,6 +193,19 @@ func _build_hud() -> void:
 	help_label.add_theme_font_size_override("font_size", 18)
 	help_label.text = "SPACE to attack  |  Red enemy: 3 hits"
 	layer.add_child(help_label)
+
+func _build_mobile_controls() -> void:
+	var layer := CanvasLayer.new()
+	layer.name = "MobileControlsLayer"
+	add_child(layer)
+	var controls := Control.new()
+	controls.name = "MobileControls"
+	controls.set_script(MOBILE_CONTROLS_SCRIPT)
+	controls.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(controls)
+	controls.movement_changed.connect(player.set_mobile_move)
+	controls.look_changed.connect(player.apply_mobile_look)
+	controls.attack_pressed.connect(player.mobile_attack)
 
 func _on_checkpoint_entered(_body: Node3D, number: int) -> void:
 	if number > checkpoint:

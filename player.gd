@@ -13,6 +13,7 @@ var health := 100
 var respawn_position := Vector3.ZERO
 var attack_timer := 0.0
 var is_attacking := false
+var mobile_move := Vector2.ZERO
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -40,12 +41,27 @@ func _unhandled_input(event: InputEvent) -> void:
 		attack_timer = 0.25
 		is_attacking = true
 
+func set_mobile_move(value: Vector2) -> void:
+	mobile_move = value
+
+func apply_mobile_look(delta: Vector2) -> void:
+	yaw -= delta.x * look_sensitivity * 0.7
+	pitch = clamp(pitch - delta.y * look_sensitivity * 0.7, -0.8, 0.35)
+	rotation.y = yaw
+	camera_pivot.rotation.x = pitch
+
+func mobile_attack() -> void:
+	attack_timer = 0.25
+	is_attacking = true
+
 func _physics_process(delta: float) -> void:
 	if attack_timer > 0.0:
 		attack_timer -= delta
 	else:
 		is_attacking = false
 	var input_2d := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	if mobile_move.length() > 0.05:
+		input_2d = mobile_move
 	var input_direction := Vector3(input_2d.x, 0.0, input_2d.y)
 	if Input.is_key_pressed(KEY_A):
 		input_direction.x -= 1.0
