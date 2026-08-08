@@ -11,6 +11,7 @@ var attack_pending := false
 var speed := 2.3
 var visual: MeshInstance3D
 var damageable
+var hit_stun := 0.0
 
 func _ready() -> void:
 	visual = get_node_or_null("MeshInstance3D")
@@ -23,6 +24,10 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(target):
+		return
+	if hit_stun > 0.0:
+		hit_stun -= delta
+		move_and_slide()
 		return
 	attack_cooldown = maxf(attack_cooldown - delta, 0.0)
 	attack_windup = maxf(attack_windup - delta, 0.0)
@@ -48,10 +53,16 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func take_damage(amount: int) -> void:
-	damageable.receive_damage(DAMAGE_INFO_SCRIPT.new(amount, "combat", null), 0.12)
+	receive_damage(DAMAGE_INFO_SCRIPT.new(amount, "combat", null))
 
-func _on_damaged(_info) -> void:
+func receive_damage(info) -> void:
+	damageable.receive_damage(info, 0.12)
+
+func _on_damaged(info) -> void:
 	health = damageable.health
+	if info.knockback != Vector3.ZERO:
+		velocity = info.knockback
+		hit_stun = 0.18
 	get_parent().play_feedback(220.0, 0.08)
 	if is_instance_valid(visual):
 		_set_visual_color(Color.WHITE)

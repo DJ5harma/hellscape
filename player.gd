@@ -104,7 +104,7 @@ func basic_attack() -> void:
 	is_attacking = true
 	attack_damage = character_data.basic_damage
 	attack_range = character_data.basic_range
-	attack_component.perform_area_attack(self, attack_range, attack_damage, "basic")
+	attack_component.perform_area_attack(self, attack_range, attack_damage, "basic", Vector3(0.0, 0.0, 2.0))
 	_play_action_animation(Color("#8ed8ff"), 1.2)
 
 func use_special() -> void:
@@ -113,7 +113,7 @@ func use_special() -> void:
 	energy -= character_data.special_cost
 	attack_damage = character_data.special_damage
 	attack_range = character_data.special_range
-	attack_component.perform_area_attack(self, attack_range, character_data.special_damage, "special")
+	attack_component.perform_area_attack(self, attack_range, character_data.special_damage, "special", Vector3(0.0, 0.0, 4.0))
 	_play_action_animation(Color("#cf9aff"), 1.35)
 
 func use_third_attack() -> void:
@@ -124,7 +124,7 @@ func use_third_attack() -> void:
 	is_attacking = true
 	attack_damage = character_data.heavy_damage
 	attack_range = character_data.heavy_range
-	attack_component.perform_area_attack(self, attack_range, character_data.heavy_damage, "heavy")
+	attack_component.perform_area_attack(self, attack_range, character_data.heavy_damage, "heavy", Vector3(0.0, 0.0, 8.0))
 	_play_action_animation(Color("#ffd36b"), 1.5)
 
 func jump() -> void:
@@ -202,10 +202,15 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func take_damage(amount: int) -> void:
-	damageable.receive_damage(DAMAGE_INFO_SCRIPT.new(amount, "combat", null), invulnerability_timer)
+	receive_damage(DAMAGE_INFO_SCRIPT.new(amount, "combat", null))
 
-func _on_damaged(_info) -> void:
+func receive_damage(info) -> void:
+	damageable.receive_damage(info, invulnerability_timer)
+
+func _on_damaged(info) -> void:
 	health = damageable.health
+	if info.knockback != Vector3.ZERO:
+		velocity = info.knockback
 	get_parent().play_feedback(110.0, 0.12)
 	_play_action_animation(Color("#ff6464"), 0.85)
 
