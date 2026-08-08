@@ -3,6 +3,7 @@ extends Node3D
 const MOBILE_CONTROLS_SCRIPT := preload("res://mobile_controls.gd")
 const FEEDBACK_AUDIO_SCRIPT := preload("res://systems/feedback_audio.gd")
 const ACTOR_FACTORY_SCRIPT := preload("res://systems/actor_factory.gd")
+const ENCOUNTER_CONTROLLER_SCRIPT := preload("res://systems/encounter_controller.gd")
 const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
 const LEVEL_TWO_SCRIPT := preload("res://level/level_2.gd")
 const HUD_SCRIPT := preload("res://ui/game_hud.gd")
@@ -20,6 +21,7 @@ var player: CharacterBody3D
 var remaining_enemies := 2
 var feedback_audio
 var actor_factory
+var encounter_controller
 var level
 var hud
 var mobile_controls
@@ -49,6 +51,11 @@ func _ready() -> void:
 	actor_factory = ACTOR_FACTORY_SCRIPT.new()
 	actor_factory.name = "ActorFactory"
 	add_child(actor_factory)
+	encounter_controller = ENCOUNTER_CONTROLLER_SCRIPT.new()
+	encounter_controller.name = "EncounterController"
+	add_child(encounter_controller)
+	encounter_controller.objective_changed.connect(_on_encounter_objective_changed)
+	encounter_controller.encounter_completed.connect(_on_encounter_completed)
 	var level_script = LEVEL_TWO_SCRIPT if level_number == 2 else LEVEL_SCRIPT
 	level = level_script.new()
 	level.name = "GrayboxLevel"
@@ -65,7 +72,10 @@ func _ready() -> void:
 	_build_pause_menu()
 	_build_mobile_controls()
 	hud.next_level_requested.connect(_load_level_two)
-	hud.set_status("LEVEL %d  |  %s  |  CLEAR THE ENCOUNTER" % [level_number, player.character_data.display_name])
+	encounter_controller.begin(
+		"LEVEL %d ENCOUNTER" % level_number,
+		"DEFEAT ALL HOSTILES"
+	)
 
 func _process(_delta: float) -> void:
 	if is_instance_valid(player) and is_instance_valid(hud):
@@ -114,6 +124,7 @@ func _build_ally() -> void:
 
 func _spawn_melee_enemy(enemy_name: String, spawn_position: Vector3, enemy_data: Resource = null) -> void:
 	actor_factory.create_melee_enemy(self, enemy_name, player, spawn_position, enemy_data)
+	encounter_controller.register_enemy()
 
 func _build_ranged_enemy() -> void:
 	var spawn_position := Vector3(8, 1.1, -35) if level_number == 1 else Vector3(5, 1.1, -70)
@@ -122,6 +133,7 @@ func _build_ranged_enemy() -> void:
 
 func _spawn_ranged_enemy(enemy_name: String, spawn_position: Vector3, enemy_data: Resource = null) -> void:
 	actor_factory.create_ranged_enemy(self, enemy_name, player, spawn_position, enemy_data)
+	encounter_controller.register_enemy()
 
 func _build_hud() -> void:
 	hud = HUD_SCRIPT.new()
@@ -185,6 +197,9 @@ func _on_checkpoint_entered(number: int) -> void:
 		player.respawn_position = player.global_position
 		hud.set_checkpoint(checkpoint)
 
+func _on_encounter_objective_changed(message: String, color: Color) -> void:
+	hud.set_status(message, color)
+
 func _on_combat_feedback(message: String, color: Color) -> void:
 	hud.set_status(message, color)
 
@@ -200,10 +215,9 @@ func _on_exit_entered() -> void:
 		hud.set_status("GATE LOCKED  |  CLEAR BOTH ENCOUNTERS FIRST")
 
 func enemy_defeated() -> void:
-	remaining_enemies -= 1
-	if remaining_enemies > 0:
-		hud.set_status("ENEMY DEFEATED  |  %d REMAINING" % remaining_enemies)
-		return
+	encounter_controller.enemy_defeated()
+
+func _on_encounter_completed() -> void:
 	encounter_complete = true
 	completion_shown = true
 	if level_number == 1:
