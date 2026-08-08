@@ -74,8 +74,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		pitch = clamp(pitch - event.relative.y * look_sensitivity, -0.8, 0.35)
 		rotation.y = yaw
 		camera_pivot.rotation.x = pitch
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventMouseButton and event.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_1:

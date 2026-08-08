@@ -5,6 +5,7 @@ const FEEDBACK_AUDIO_SCRIPT := preload("res://systems/feedback_audio.gd")
 const ACTOR_FACTORY_SCRIPT := preload("res://systems/actor_factory.gd")
 const LEVEL_SCRIPT := preload("res://level/graybox_level.gd")
 const HUD_SCRIPT := preload("res://ui/game_hud.gd")
+const PAUSE_MENU_SCRIPT := preload("res://ui/pause_menu.gd")
 const DEFAULT_CHARACTER_DATA := preload("res://data/default_character.tres")
 const SCOUT_CHARACTER_DATA := preload("res://data/scout_character.tres")
 
@@ -18,6 +19,7 @@ var actor_factory
 var level
 var hud
 var mobile_controls
+var pause_menu
 var using_scout := false
 
 var colors := {
@@ -30,6 +32,7 @@ var colors := {
 }
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	feedback_audio = FEEDBACK_AUDIO_SCRIPT.new()
 	feedback_audio.name = "FeedbackAudio"
 	add_child(feedback_audio)
@@ -47,6 +50,7 @@ func _ready() -> void:
 	_build_enemy()
 	_build_ranged_enemy()
 	_build_hud()
+	_build_pause_menu()
 	_build_mobile_controls()
 
 func _process(_delta: float) -> void:
@@ -56,11 +60,21 @@ func _process(_delta: float) -> void:
 			mobile_controls.set_ability_state(player.is_special_ready(), player.is_dodge_ready())
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		pause_menu.toggle()
+		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_TAB:
 		using_scout = not using_scout
 		var selected_data = SCOUT_CHARACTER_DATA if using_scout else DEFAULT_CHARACTER_DATA
 		player.set_character_data(selected_data)
 		hud.set_status("CHARACTER: %s" % selected_data.display_name, selected_data.visual_color)
+
+func _build_pause_menu() -> void:
+	pause_menu = PAUSE_MENU_SCRIPT.new()
+	pause_menu.name = "PauseMenu"
+	add_child(pause_menu)
+	pause_menu.restart_requested.connect(_restart_level)
+	pause_menu.sensitivity_changed.connect(_set_camera_sensitivity)
 
 func _build_player() -> void:
 	player = actor_factory.create_player(self, Vector3(0, 1.1, 5))
@@ -101,6 +115,14 @@ func _build_mobile_controls() -> void:
 	controls.attack_pressed.connect(player.mobile_attack)
 	controls.special_pressed.connect(player.mobile_special)
 	controls.dodge_pressed.connect(player.mobile_dodge)
+	controls.pause_pressed.connect(pause_menu.toggle)
+
+func _set_camera_sensitivity(value: float) -> void:
+	player.look_sensitivity = value
+
+func _restart_level() -> void:
+	get_tree().paused = false
+	get_tree().reload_current_scene()
 
 func _on_checkpoint_entered(number: int) -> void:
 	if number > checkpoint:
